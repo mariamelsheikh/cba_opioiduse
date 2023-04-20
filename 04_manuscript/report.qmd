@@ -1,0 +1,85 @@
+---
+title: "Cost benefit analysis of the federal interventions that aim to reduce the harms of opioid crisis"
+subtitle: "Final Project | EPIB676"
+author: "Mariam El Sheikh"
+format:
+  html:
+    toc: true
+    number-sections: true
+    highlight-style: github
+    embed-resources: true
+editor: visual
+date: last-modified
+date-format: "DD/MM/YYYY THH:mm"
+fig-width: 20
+fig-height: 12
+warning: false
+message: false
+code-fold: true
+---
+
+# Background
+
+---What is the decision problem your model aims to inform? What is already known, and what are the key questions you hope to address? Why is this important?-----
+
+This project aims to evaluate the future economic impact of these interventions by conducting a cost-benefit analysis to examine the difference in healthcare costs between the interventions and their projected effect on reducing opioid-related deaths and other important health outcomes
+
+# Methods
+
+-----------What is your analytic design, setting, outcome(s) estimated, alternatives, population, time horizon? How is your model structured, and what dynamics or quantities are captured? What simplifications have you made to the model? What data are you using to parameterize or calibrate your model (ideally, presented in one or more tables)? What uncertainty analysis are you conducting--------------
+
+An open cohort Markov model was used (fig. 1) that consists of 31 states representing the pathways of opioid use in Canada over 15 years (2015 to 2029) with monthly cycles for 15+ Canadian population. It is an open cohort model that takes into account the changes in population over time by adding people to the first state (Pain free, no use) every cycle. The yearly increase was assumed to be constant throughout the year (so each increase was divided by 12, as for years in the future, projections of population size in Canada were used and proportion of those 15+ was estimated based on previous data, then a similar approach was used to estimate the monthly increase in the cohort).   
+--- Talk about the model and probabilities ----
+
+## Alternatives
+
+This model was run for 5 scenarios in regards to the previously mentioned interventions: 1) No interventions, 2) Naloxone only, 3) Prescription guidelines only, 4) Safer Supply only, and 5) all 3 interventions. 
+The effects of each of the interventions were estimated by other team members who conducted a systematic review of the literature (Table ... shows a summary of the changes associated with each intervention) 
+
+```{r}
+mod_interventions <- c("No intervention", "Naloxone", "Naloxone", "Prescription guidelines", "Safer Supply", "All interventions")
+changes <- c("No changes", "")
+```
+
+
+For the naloxone intervention: the probability of transitioning from illicit opioid overdose to OD death was reduced by 5%, and that of transitioning from rx opioid overdose to OD deaths was reduced by 3%. As for prescription guidelines the following changes were applied, transitioning from pain free to acute 
+
+## Outcomes
+
+
+Opioid-related costs from the healthcare perspectives for all states will be used in this analysis. These would include costs for hospitalization, ED visits, physician billing, paramedic services, drugs, and other healthcare system related costs. These were identified from publicly available data, as well as published systematic reviews, studies, and reports.
+I will also examine epidemiological measures: prevalence of OD, number of OD-related deaths and OD-related brain injury
+
+
+The primary outcomes are difference in 1) costs, 2) opioid-related overdose deaths (OD deaths) and 3) overall deaths excluding OD deaths between interventions models and no intervention model. The secondary outcomes are weighted yearly prevalence of: 1) severe brain injuries due to opioid overdose, 2) moderate brain injuries due to opioid overdose, 3) substance use treatment and 4) prescription opioid use, in addition to monthly prevalence trends of the 4 outcomes. Primary outcomes were included the probabilistic sensitivity analysis (PSA), while only point estimates were calculated for secondary outcomes.  
+
+## 
+
+
+
+
+ 
+
+
+# Results
+
+What are your main findings? Should estimate some outcome(s) for \>1 alternative, and potentially conduct incremental analysis (compute ICERS) depending on your framework. Report uncertainty analysis findings to give some idea of the robustness of your findings
+
+# Expansion Plan
+
+If you were to develop this initial analysis into one fit for submission for peer reviewed publication, what steps would you take? Which aspects of the analysis would need to be improved?
+
+# Discussion
+
+What are the key takeaways from your initial analysis (and/or, what might the takeaways be if a more complete analysis was conducted)? What is the relationship between your findings and the wider literature or policy landscape? What are the strengths and limitations of your analysis?
+
+
+
+```{r}
+library(here)
+```
+
+# Appendix
+
+```{r child = here('03_outputs/02a_uncalib_vs_calibtargets_td.qmd')}
+```

@@ -1,0 +1,1511 @@
+---
+title: "05_cba_results"
+format:
+  html:
+    toc: true
+    number-sections: true
+    highlight-style: github
+    embed-resources: true
+editor: visual
+date: last-modified
+date-format: "DD/MM/YYYY THH:mm"
+fig-width: 20
+fig-height: 12
+warning: false
+message: false
+code-fold: true
+---
+
+```{r}
+library(here)
+library(flextable)
+library(plotly)
+source(here("02_scripts/03a_fun_calib_td.R"))
+source(here("02_scripts/06_interventions_models.R"))
+
+theme_set(theme_minimal())
+```
+
+Scenario 1: Accounts for the effect of Fentanyl contamination starting from 2018 Scenario 2: Scenario 2: Doesn't account for Fentanyl contamination and has the same probability from Illicit use to OD and from OD to OD death
+
+```{r}
+trace_tbl <- as_tibble(mod_basecase$m_M) %>% 
+  mutate(cycle_num = 0:n_cycles) %>% 
+  pivot_longer(1:n_states, names_to = "state", values_to = "count") %>% 
+  mutate(mod = "No Interventions") %>% 
+  bind_rows(., as_tibble(mod_nalx_1$m_M) %>% 
+              mutate(cycle_num = 0:n_cycles) %>% 
+              pivot_longer(1:n_states, names_to = "state", values_to = "count") %>% 
+              mutate(mod = "Naloxone")) %>% 
+  bind_rows(., as_tibble(mod_ss_1$m_M) %>% 
+              mutate(cycle_num = 0:n_cycles) %>% 
+              pivot_longer(1:n_states, names_to = "state", values_to = "count") %>% 
+              mutate(mod = "Safer Supply")) %>% 
+  bind_rows(., as_tibble(mod_pres_guid_1$m_M) %>% 
+              mutate(cycle_num = 0:n_cycles) %>% 
+              pivot_longer(1:n_states, names_to = "state", values_to = "count") %>% 
+              mutate(mod = "Prescription Guidelines")) %>% 
+  bind_rows(., as_tibble(mod_all_int_1$m_M) %>% 
+              mutate(cycle_num = 0:n_cycles) %>% 
+              pivot_longer(1:n_states, names_to = "state", values_to = "count") %>% 
+              mutate(mod = "All Interventions"))
+
+trace_tbl$mod <- factor(trace_tbl$mod,
+                        levels = c("No Interventions", "Naloxone", "Safer Supply", "Prescription Guidelines", "All Interventions"),
+                        labels = c("No Interventions", "Naloxone", "Safer Supply", "Prescription Guidelines", "All Interventions"))
+
+v_extra_sevbi <- c(mod_basecase$extra_sev_bi, mod_nalx_1$extra_sev_bi,
+                   mod_ss_1$extra_sev_bi, mod_pres_guid_1$extra_sev_bi,
+                   mod_all_int_1$extra_sev_bi)
+
+v_extra_modbi <- c(mod_basecase$extra_mod_bi, mod_nalx_1$extra_mod_bi,
+                   mod_ss_1$extra_mod_bi, mod_pres_guid_1$extra_mod_bi,
+                   mod_all_int_1$extra_mod_bi)
+
+v_extra_od <- c(mod_basecase$extra_od_deaths, mod_nalx_1$extra_od_deaths,
+                   mod_ss_1$extra_od_deaths, mod_pres_guid_1$extra_od_deaths,
+                   mod_all_int_1$extra_od_deaths)
+
+mod_names <- c("No Interventions", "Naloxone", "Safer Supply", "Prescription Guidelines", "All Interventions")
+mod_names <- factor(mod_names, levels = mod_names, labels = mod_names)
+
+for (j in 1:length(mod_names)){
+  
+  trace_tbl$count[trace_tbl$state == "BO_OD_DEATH" &
+                      trace_tbl$cycle_num == 180 &
+                      trace_tbl$mod == mod_names[j]] <- trace_tbl$count[trace_tbl$state == "BO_OD_DEATH" &
+                      trace_tbl$cycle_num == 180 &
+                      trace_tbl$mod == mod_names[j]] + v_extra_od[j]
+  
+  trace_tbl$count[trace_tbl$state == "BO_MOD_BI" &
+                      trace_tbl$cycle_num == 180  &
+                      trace_tbl$mod == mod_names[j]] <- trace_tbl$count[trace_tbl$state == "BO_MOD_BI" &
+                      trace_tbl$cycle_num == 180  &
+                      trace_tbl$mod == mod_names[j]] + v_extra_modbi[j]
+  
+  trace_tbl$count[trace_tbl$state == "BO_SEVERE_BI" &
+                      trace_tbl$cycle_num == 180  &
+                      trace_tbl$mod == mod_names[j]] <- trace_tbl$count[trace_tbl$state == "BO_SEVERE_BI" &
+                      trace_tbl$cycle_num == 180  &
+                      trace_tbl$mod == mod_names[j]] + v_extra_sevbi[j]
+}
+
+trace_tbl$state <- factor(trace_tbl$state,
+                              levels = v_state_names,
+                              labels = v_state_names)
+```
+
+```{r}
+
+trace_tbl_2 <- as_tibble(mod_basecase_2$m_M) %>% 
+  mutate(cycle_num = 0:n_cycles) %>% 
+  pivot_longer(1:n_states, names_to = "state", values_to = "count") %>% 
+  mutate(mod = "No Interventions") %>% 
+  bind_rows(., as_tibble(mod_nalx_2$m_M) %>% 
+              mutate(cycle_num = 0:n_cycles) %>% 
+              pivot_longer(1:n_states, names_to = "state", values_to = "count") %>% 
+              mutate(mod = "Naloxone")) %>% 
+  bind_rows(., as_tibble(mod_ss_2$m_M) %>% 
+              mutate(cycle_num = 0:n_cycles) %>% 
+              pivot_longer(1:n_states, names_to = "state", values_to = "count") %>% 
+              mutate(mod = "Safer Supply")) %>% 
+  bind_rows(., as_tibble(mod_pres_guid_2$m_M) %>% 
+              mutate(cycle_num = 0:n_cycles) %>% 
+              pivot_longer(1:n_states, names_to = "state", values_to = "count") %>% 
+              mutate(mod = "Prescription Guidelines")) %>% 
+  bind_rows(., as_tibble(mod_all_int_2$m_M) %>% 
+              mutate(cycle_num = 0:n_cycles) %>% 
+              pivot_longer(1:n_states, names_to = "state", values_to = "count") %>% 
+              mutate(mod = "All Interventions"))
+
+trace_tbl_2$mod <- factor(trace_tbl_2$mod,
+                        levels = c("No Interventions", "Naloxone", "Safer Supply", "Prescription Guidelines", "All Interventions"),
+                        labels = c("No Interventions", "Naloxone", "Safer Supply", "Prescription Guidelines", "All Interventions"))
+
+v_extra_sevbi_2 <- c(mod_basecase_2$extra_sev_bi, mod_nalx_2$extra_sev_bi,
+                   mod_ss_2$extra_sev_bi, mod_pres_guid_2$extra_sev_bi,
+                   mod_all_int_2$extra_sev_bi)
+
+v_extra_modbi_2 <- c(mod_basecase_2$extra_mod_bi, mod_nalx_2$extra_mod_bi,
+                   mod_ss_2$extra_mod_bi, mod_pres_guid_2$extra_mod_bi,
+                   mod_all_int_2$extra_mod_bi)
+
+v_extra_od_2 <- c(mod_basecase_2$extra_od_deaths, mod_nalx_2$extra_od_deaths,
+                   mod_ss_2$extra_od_deaths, mod_pres_guid_2$extra_od_deaths,
+                   mod_all_int_2$extra_od_deaths)
+
+for (j in 1:length(mod_names)){
+  
+  trace_tbl_2$count[trace_tbl_2$state == "BO_OD_DEATH" &
+                      trace_tbl_2$cycle_num == 180 &
+                      trace_tbl_2$mod == mod_names[j]] <- trace_tbl_2$count[trace_tbl_2$state == "BO_OD_DEATH" &
+                      trace_tbl_2$cycle_num == 180 &
+                      trace_tbl_2$mod == mod_names[j]] + v_extra_od_2[j]
+  
+  trace_tbl_2$count[trace_tbl_2$state == "BO_MOD_BI" &
+                      trace_tbl_2$cycle_num == 180  &
+                      trace_tbl_2$mod == mod_names[j]] <- trace_tbl_2$count[trace_tbl_2$state == "BO_MOD_BI" &
+                      trace_tbl_2$cycle_num == 180  &
+                      trace_tbl_2$mod == mod_names[j]] + v_extra_modbi_2[j]
+
+    trace_tbl_2$count[trace_tbl_2$state == "BO_SEVERE_BI" &
+                      trace_tbl_2$cycle_num == 180  &
+                      trace_tbl_2$mod == mod_names[j]] <- trace_tbl_2$count[trace_tbl_2$state == "BO_SEVERE_BI" &
+                      trace_tbl_2$cycle_num == 180  &
+                      trace_tbl_2$mod == mod_names[j]] + v_extra_sevbi_2[j]
+}
+
+trace_tbl_2$state <- factor(trace_tbl_2$state,
+                              levels = v_state_names,
+                              labels = v_state_names)
+
+trace_tbl <- trace_tbl %>% 
+  mutate(scenario = "Scenario 1") %>% 
+  bind_rows(., trace_tbl_2 %>% 
+              mutate(scenario = "Scenario 2"))
+
+```
+
+## Cumulative OD Deaths
+
+##### Cumulative OD Deaths - Scenario 1
+
+```{r}
+p1 <- ggplot(trace_tbl %>% 
+               filter(state == "BO_OD_DEATH") %>% 
+               filter(cycle_num != 0) %>% 
+               filter((cycle_num + 1) %% 12 == 1) %>% 
+               filter(scenario == "Scenario 1") %>% 
+               mutate(year = rep(c(2015:2029), length(mod_names))),
+             aes(x = year, y = count, colour = mod)) +
+               geom_line() +
+               geom_point(size = 1) +
+               ylab("Cumulative OD Deaths") + xlab("Year") +
+               labs(colour = "Intervention")
+
+ggplotly(p1)
+```
+
+##### Cumulative OD Deaths - Scenario 2
+
+```{r}
+p2 <- ggplot(trace_tbl %>% 
+               filter(state == "BO_OD_DEATH") %>% 
+               filter(cycle_num != 0) %>% 
+               filter((cycle_num + 1) %% 12 == 1) %>% 
+               filter(scenario == "Scenario 2") %>% 
+               mutate(year = rep(c(2015:2029), length(mod_names))),
+             aes(x = year, y = count, colour = mod)) +
+               geom_line() +
+               geom_point(size = 1) +
+               ylab("Cumulative OD Deaths") + xlab("Year") +
+               labs(colour = "Intervention")
+
+ggplotly(p2)
+```
+
+##### Both scenarios
+
+```{r}
+plotly::ggplotly(ggplot(trace_tbl %>% 
+               filter(state == "BO_OD_DEATH") %>% 
+               filter(cycle_num != 0) %>% 
+               filter((cycle_num + 1) %% 12 == 1) %>% 
+               mutate(year = rep(c(2015:2029), length(mod_names)*2)),
+             aes(x = year, y = count, colour = mod)) +
+               geom_line() +
+               geom_point(size = 1) +
+               ylab("Cumulative OD Deaths") + xlab("Year") +
+               labs(colour = "Intervention") +
+               facet_wrap(~scenario) +
+               labs(caption = "Scenario 1: Accounts for the effect of Fentanyl contamination starting from 2018 \n
+                    Scenario 2: Doesn't account for Fentanyl contamination and has the same probability from \n Illicit use to OD and from OD to OD death"))
+```
+
+## New OD Deaths per year
+
+```{r}
+inci_od_deaths_basecase <- inci_od_deaths_nalox <- inci_od_deaths_ss <- inci_od_deaths_pg <- inci_od_deaths_all <- inci_od_deaths_basecase_2 <- inci_od_deaths_nalox_2 <- inci_od_deaths_ss_2 <- inci_od_deaths_pg_2 <- inci_od_deaths_all_2 <-  rep(NA, 14)
+
+for (i in 1:14){
+  yr <- 2015 + i 
+  inci_od_deaths_basecase[i] <- mod_basecase$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                          year_mon_cycle_tbl$mon == 12] + 1,
+                                               "BO_OD_DEATH"] -
+    mod_basecase$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_OD_DEATH"]
+  
+  inci_od_deaths_basecase_2[i] <- mod_basecase_2$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                          year_mon_cycle_tbl$mon == 12] + 1,
+                                               "BO_OD_DEATH"] -
+    mod_basecase_2$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_OD_DEATH"]
+  
+  inci_od_deaths_nalox[i] <- mod_nalx_1$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                          year_mon_cycle_tbl$mon == 12] + 1,
+                                               "BO_OD_DEATH"] -
+    mod_nalx_1$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_OD_DEATH"]
+  
+   inci_od_deaths_nalox_2[i] <- mod_nalx_2$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                          year_mon_cycle_tbl$mon == 12] + 1,
+                                               "BO_OD_DEATH"] -
+    mod_nalx_2$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_OD_DEATH"]
+  
+  inci_od_deaths_ss[i] <- mod_ss_1$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                          year_mon_cycle_tbl$mon == 12] + 1,
+                                               "BO_OD_DEATH"] -
+    mod_ss_1$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_OD_DEATH"]
+  
+   inci_od_deaths_ss_2[i] <- mod_ss_2$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                          year_mon_cycle_tbl$mon == 12] + 1,
+                                               "BO_OD_DEATH"] -
+    mod_ss_2$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_OD_DEATH"]
+  
+  inci_od_deaths_pg[i] <- mod_pres_guid_1$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                          year_mon_cycle_tbl$mon == 12] + 1,
+                                               "BO_OD_DEATH"] -
+    mod_pres_guid_1$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_OD_DEATH"]
+  
+   inci_od_deaths_pg_2[i] <- mod_pres_guid_2$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                          year_mon_cycle_tbl$mon == 12] + 1,
+                                               "BO_OD_DEATH"] -
+    mod_pres_guid_2$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_OD_DEATH"]
+  
+  
+  inci_od_deaths_all[i] <- mod_all_int_1$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                          year_mon_cycle_tbl$mon == 12] + 1,
+                                               "BO_OD_DEATH"] -
+    mod_all_int_1$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_OD_DEATH"]
+  
+  inci_od_deaths_all_2[i] <- mod_all_int_2$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                          year_mon_cycle_tbl$mon == 12] + 1,
+                                               "BO_OD_DEATH"] -
+    mod_all_int_2$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_OD_DEATH"]
+}
+
+inc_od_death_tbl <- data.frame(intervention = c(rep(mod_names, each = 14)),
+           year = c(rep(2016:2029, 5)),
+           inci_od_deaths = c(inci_od_deaths_basecase,
+                              inci_od_deaths_nalox,
+                              inci_od_deaths_ss,
+                              inci_od_deaths_pg,
+                              inci_od_deaths_all),
+           scenario = rep("Scenario 1", 14*5)) %>% 
+  bind_rows(., data.frame(intervention = c(rep(mod_names, each = 14)),
+           year = c(rep(2016:2029, 5)),
+           inci_od_deaths = c(inci_od_deaths_basecase_2,
+                              inci_od_deaths_nalox_2,
+                              inci_od_deaths_ss_2, 
+                              inci_od_deaths_pg_2,
+                              inci_od_deaths_all_2),
+           scenario = rep("Scenario 2", 14*5)))
+
+saveRDS(inc_od_death_tbl, file = "inc_od_death_tbl_mod.RDS")
+
+target_od_deaths <- calib_target_tbl %>% 
+  filter(group == "total_od_deaths") %>% 
+  select(year, target) %>% 
+  rename(inci_od_deaths = target) %>% 
+  mutate(intervention = "Target")
+
+saveRDS(target_od_deaths, file = "inc_od_death_tbl_target.RDS")
+
+inc_od_death_tbl$intervention <- factor(inc_od_death_tbl$intervention,
+                                        levels = mod_names, labels = mod_names)
+```
+
+##### Scenario 1
+
+```{r}
+p3 <- ggplot(inc_od_death_tbl %>% filter(scenario == "Scenario 1"),
+                        aes(x = year, y = inci_od_deaths, color = intervention)) +
+               geom_line() +
+               geom_point(size = 1) +
+                 geom_point(data = target_od_deaths, aes (x = year, y = inci_od_deaths)) +
+               ylab("New OD Deaths per year") + xlab("Year") +
+               labs(colour = "Intervention") +
+                 scale_color_brewer(palette = "Dark2")
+
+ggplotly(p3)
+```
+
+##### Scenario 2
+
+```{r}
+p4 <- ggplot(inc_od_death_tbl %>% filter(scenario == "Scenario 2"),
+                        aes(x = year, y = inci_od_deaths, color = intervention)) +
+               geom_line() +
+               geom_point(size = 1) +
+                 geom_point(data = target_od_deaths, aes (x = year, y = inci_od_deaths)) +
+               ylab("New OD Deaths per year") + xlab("Year") +
+               labs(colour = "Intervention") +
+                 scale_color_brewer(palette = "Dark2")
+
+ggplotly(p4)
+```
+
+##### Both scenarios
+
+```{r}
+plotly::ggplotly(ggplot(inc_od_death_tbl,
+                        aes(x = year, y = inci_od_deaths, color = intervention)) +
+               geom_line() +
+               geom_point(size = 1) +
+                 geom_point(data = target_od_deaths, aes (x = year, y = inci_od_deaths)) +
+               ylab("New OD Deaths per year") + xlab("Year") +
+               labs(colour = "Intervention") +
+                 scale_color_brewer(palette = "Dark2") +
+                 facet_wrap(~scenario))
+```
+
+## Cumulative Deaths
+
+##### Scenario 1
+
+```{r}
+p5 <- ggplot(trace_tbl %>% 
+               filter(state == "BO_DEATH") %>% 
+               filter(cycle_num != 0) %>% 
+               filter((cycle_num + 1) %% 12 == 1) %>% 
+               filter(scenario == "Scenario 1") %>% 
+               mutate(year = rep(c(2015:2029), length(mod_names))),
+             aes(x = year, y = count, colour = mod)) +
+  geom_line() +
+  ylab("Cumulative Deaths (excluding OD-deaths)") + xlab("Year") +
+    labs(colour = "Intervention") 
+
+ggplotly(p5)
+```
+
+##### Scenario 2
+
+```{r}
+p6 <- ggplot(trace_tbl %>% 
+               filter(state == "BO_DEATH") %>% 
+               filter(cycle_num != 0) %>% 
+               filter((cycle_num + 1) %% 12 == 1) %>% 
+               filter(scenario == "Scenario 2") %>% 
+               mutate(year = rep(c(2015:2029), length(mod_names))),
+             aes(x = year, y = count, colour = mod)) +
+  geom_line() +
+  ylab("Cumulative Deaths (excluding OD-deaths)") + xlab("Year") +
+    labs(colour = "Intervention") 
+
+ggplotly(p6)
+```
+
+##### Both scenarios
+
+```{r}
+plotly::ggplotly(ggplot(trace_tbl %>% 
+               filter(state == "BO_DEATH") %>% 
+               filter(cycle_num != 0) %>% 
+               filter((cycle_num + 1) %% 12 == 1) %>% 
+               mutate(year = rep(c(2015:2029), length(mod_names)*2)),
+             aes(x = year, y = count, colour = mod)) +
+  geom_line() +
+  ylab("Cumulative Deaths (excluding OD-deaths)") + xlab("Year") +
+    labs(colour = "Intervention") +
+    facet_wrap(~scenario))
+```
+
+## Trace Plots
+
+```{r}
+set.seed(122345)
+colors_pal <- Polychrome::createPalette(n_states,
+                                        c("#084C61", "#DB504A",
+                                                   "#E3B505", "#4F6D7A", 
+                                                      "#56A3A6"))
+names(colors_pal) <- NULL
+
+ggplotly(ggplot(trace_tbl %>% 
+         filter(grepl("BPO", state)), aes(x = cycle_num, y = count, colour = state)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  ggrepel::geom_text_repel(data = trace_tbl %>% filter(cycle_num == 180) %>% 
+         filter(grepl("BPO", state)), 
+                  aes(x = cycle_num, y = count, label = state), 
+                  check_overlap = T, size = 3) +
+  scale_color_manual(values = colors_pal) +
+  # facet_wrap(~mod) +
+    facet_grid(rows = vars(mod), cols = vars(scenario),
+               switch = "y"))
+```
+
+```{r}
+plotly::ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% c("BPO_MISUSE", "BI_ILLICIT", 
+                             "BS_OAT_INI", "BS_OAT_MAINT")), aes(x = cycle_num, y = count, colour = state)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  ggrepel::geom_text_repel(data = trace_tbl %>% 
+         filter(state %in% c("BPO_MISUSE", "BI_ILLICIT",
+                             "BS_OAT_INI", "BS_OAT_MAINT")) %>% filter(cycle_num == 180), 
+                  aes(x = cycle_num, y = count, label = state), 
+                  check_overlap = T, size = 3) +
+  scale_color_manual(values = colors_pal)  +
+  # facet_wrap(~mod) +
+    facet_grid(rows = vars(mod), cols = vars(scenario),
+               switch = "y"))
+
+plotly::ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% c("BS_OAT_SS", "BS_SS")), aes(x = cycle_num, y = count, colour = state)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  ggrepel::geom_text_repel(data = trace_tbl %>% 
+         filter(state %in% c("BS_OAT_SS", "BS_SS")) %>% filter(cycle_num == 180), 
+                  aes(x = cycle_num, y = count, label = state), 
+                  check_overlap = T, size = 3) +
+  scale_color_manual(values = colors_pal) +
+  # facet_wrap(~mod) +
+    facet_grid(rows = vars(mod), cols = vars(scenario),
+               switch = "y"))
+
+
+plotly::ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% c("BO_OD_ILLICIT", "BO_OD_RX",
+                             "BO_MOD_BI", "BO_SEVERE_BI")), aes(x = cycle_num, y = count, colour = state)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  ggrepel::geom_text_repel(data = trace_tbl %>% 
+         filter(state %in% c("BO_OD_ILLICIT", "BO_OD_RX",
+                             "BO_MOD_BI", "BO_SEVERE_BI")) %>% filter(cycle_num == 180), 
+                  aes(x = cycle_num, y = count, label = state), 
+                  check_overlap = T, size = 3) +
+  scale_color_manual(values = colors_pal)  +
+  # facet_wrap(~mod) +
+    facet_grid(rows = vars(mod), cols = vars(scenario),
+               switch = "y"))
+
+plotly::ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% c("BR_ILLICIT", "BR_OAT_INI",
+                             "BR_OAT_MAINT", "BR_OAT_SS",
+                             "BR_SS", "BR_OD_ILLICIT")), aes(x = cycle_num, y = count, colour = state)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  ggrepel::geom_text_repel(data = trace_tbl %>% 
+         filter(state %in% c("BR_ILLICIT", "BR_OAT_INI",
+                             "BR_OAT_MAINT", "BR_OAT_SS",
+                             "BR_SS", "BR_OD_ILLICIT")) %>% filter(cycle_num == 180), 
+                  aes(x = cycle_num, y = count, label = state), 
+                  check_overlap = T, size = 3) +
+  scale_color_manual(values = colors_pal)  +
+  # facet_wrap(~mod) +
+    facet_grid(rows = vars(mod), cols = vars(scenario),
+               switch = "y"))
+```
+
+## CBA results
+
+#### Scenario 1
+
+```{r}
+cost_diff <- c(mod_nalx_1$total_net_present_cost - mod_basecase$total_net_present_cost,
+               mod_ss_1$total_net_present_cost - mod_basecase$total_net_present_cost,
+               mod_pres_guid_1$total_net_present_cost - mod_basecase$total_net_present_cost,
+               mod_all_int_1$total_net_present_cost - mod_basecase$total_net_present_cost)
+
+cost_diff_per <- c(round((cost_diff/c(mod_basecase$total_net_present_cost))*100,2))
+
+deaths_eff_tbl <- trace_tbl %>% 
+  filter(scenario == "Scenario 1") %>% 
+  filter(cycle_num == 180) %>% 
+  select(-cycle_num) %>% 
+  pivot_wider(names_from = mod, values_from = count) %>% 
+  filter(state %in% c("BO_DEATH", "BO_OD_DEATH")) %>% 
+  mutate(nalx_effect = Naloxone - `No Interventions`,
+         ss_effect = `Safer Supply` - `No Interventions`,
+         pg_effect = `Prescription Guidelines` - `No Interventions`,
+         all_effect = `All Interventions` - `No Interventions`,
+         nalx_effect_per = round(((Naloxone - `No Interventions`)/`No Interventions`)*100, 2),
+         ss_effect_per = round(((`Safer Supply` - `No Interventions`)/`No Interventions`)*100, 2),
+         pg_effect_per = round(((`Prescription Guidelines` - `No Interventions`)/`No Interventions`)*100, 2),
+         all_effect_per = round(((`All Interventions` - `No Interventions`)/`No Interventions`)*100, 2)) %>% 
+  select(-c(Naloxone, `No Interventions`, `Safer Supply`, `Prescription Guidelines`, `All Interventions`))
+
+
+total_death_oddeaths <- trace_tbl %>% 
+  filter(scenario == "Scenario 1") %>%
+  filter(cycle_num == 180) %>% 
+  select(-cycle_num) %>% 
+  pivot_wider(names_from = mod, values_from = count) %>% 
+  filter(state %in% c("BO_DEATH", "BO_OD_DEATH"))
+
+od_deaths_diff <- c(deaths_eff_tbl$nalx_effect[1], deaths_eff_tbl$ss_effect[1],
+                 deaths_eff_tbl$pg_effect[1], deaths_eff_tbl$all_effect[1])
+od_deaths_diff_per <- c(deaths_eff_tbl$nalx_effect_per[1], deaths_eff_tbl$ss_effect_per[1],
+                 deaths_eff_tbl$pg_effect_per[1], deaths_eff_tbl$all_effect_per[1])
+deaths_diff <- c(deaths_eff_tbl$nalx_effect[2], deaths_eff_tbl$ss_effect[2],
+                 deaths_eff_tbl$pg_effect[2], deaths_eff_tbl$all_effect[2])
+deaths_diff_per <- c(deaths_eff_tbl$nalx_effect_per[2], deaths_eff_tbl$ss_effect_per[2],
+                 deaths_eff_tbl$pg_effect_per[2], deaths_eff_tbl$all_effect_per[2])
+
+
+saveRDS(cbind.data.frame(cost_diff, cost_diff_per,
+                         od_deaths_diff, od_deaths_diff_per,
+                         deaths_diff, deaths_diff_per), "point_estiamte.RDS")
+saveRDS(total_death_oddeaths, "total_deaths_oddeaths.RDS")
+
+costs <- paste0(round(cost_diff/1000000, 0), " (", cost_diff_per, "%)")
+deaths <- paste0(round(deaths_diff, 0), " (", deaths_diff_per, "%)")
+oddeaths <- paste0(round(od_deaths_diff, 0), " (", od_deaths_diff_per, "%)")
+
+effects_tbl <- cbind.data.frame(mod_names[-1], costs, deaths, oddeaths)
+
+effects_tbl |> 
+  flextable() |> 
+  add_header_row(colwidths = c(1, 3),
+                      values = c("", "Mean Change Compared to No Intervention")) |>
+  set_header_labels(values = list(
+                         `mod_names[-1]` = "Interventions",
+                         costs = "Discounted Net Present Costs \n in Millions (%)",
+                         deaths = "Deaths (%)",
+                         oddeaths = "Overdose-related Deaths (%)")) |>
+  theme_vanilla() |>
+  set_table_properties(layout = "autofit") |>
+  align_text_col(align = "center", header = TRUE, footer = TRUE)
+```
+
+#### Scenario 2
+
+```{r}
+cost_diff_2 <- c(mod_nalx_2$total_net_present_cost - mod_basecase_2$total_net_present_cost,
+               mod_ss_2$total_net_present_cost - mod_basecase_2$total_net_present_cost,
+               mod_pres_guid_2$total_net_present_cost - mod_basecase_2$total_net_present_cost,
+               mod_all_int_2$total_net_present_cost - mod_basecase_2$total_net_present_cost)
+
+cost_diff_per_2 <- c(round((cost_diff_2/c(mod_basecase_2$total_net_present_cost))*100,2))
+
+deaths_eff_tbl_2 <- trace_tbl %>% 
+  filter(scenario == "Scenario 2") %>% 
+  filter(cycle_num == 180) %>% 
+  select(-cycle_num) %>% 
+  pivot_wider(names_from = mod, values_from = count) %>% 
+  filter(state %in% c("BO_DEATH", "BO_OD_DEATH")) %>% 
+  mutate(nalx_effect = Naloxone - `No Interventions`,
+         ss_effect = `Safer Supply` - `No Interventions`,
+         pg_effect = `Prescription Guidelines` - `No Interventions`,
+         all_effect = `All Interventions` - `No Interventions`,
+         nalx_effect_per = round(((Naloxone - `No Interventions`)/`No Interventions`)*100, 2),
+         ss_effect_per = round(((`Safer Supply` - `No Interventions`)/`No Interventions`)*100, 2),
+         pg_effect_per = round(((`Prescription Guidelines` - `No Interventions`)/`No Interventions`)*100, 2),
+         all_effect_per = round(((`All Interventions` - `No Interventions`)/`No Interventions`)*100, 2)) %>% 
+  select(-c(Naloxone, `No Interventions`, `Safer Supply`, `Prescription Guidelines`, `All Interventions`))
+
+od_deaths_diff_2 <- c(deaths_eff_tbl_2$nalx_effect[1], deaths_eff_tbl_2$ss_effect[1],
+                 deaths_eff_tbl_2$pg_effect[1], deaths_eff_tbl_2$all_effect[1])
+od_deaths_diff_per_2 <- c(deaths_eff_tbl_2$nalx_effect_per[1], deaths_eff_tbl_2$ss_effect_per[1],
+                 deaths_eff_tbl_2$pg_effect_per[1], deaths_eff_tbl_2$all_effect_per[1])
+deaths_diff_2 <- c(deaths_eff_tbl_2$nalx_effect[2], deaths_eff_tbl_2$ss_effect[2],
+                 deaths_eff_tbl_2$pg_effect[2], deaths_eff_tbl_2$all_effect[2])
+deaths_diff_per_2 <- c(deaths_eff_tbl_2$nalx_effect_per[2], deaths_eff_tbl_2$ss_effect_per[2],
+                 deaths_eff_tbl_2$pg_effect_per[2], deaths_eff_tbl_2$all_effect_per[2])
+
+costs_2 <- paste0(round(cost_diff_2/1000000, 0), " (", cost_diff_per_2, "%)")
+deaths_2 <- paste0(round(deaths_diff_2, 0), " (", deaths_diff_per_2, "%)")
+oddeaths_2 <- paste0(round(od_deaths_diff_2, 0), " (", od_deaths_diff_per_2, "%)")
+
+effects_tbl_2 <- cbind.data.frame(mod_names[-1], costs_2, deaths_2, oddeaths_2)
+
+effects_tbl_2 |> 
+  flextable() |> 
+  add_header_row(colwidths = c(1, 3),
+                      values = c("", "Mean Change Compared to No Intervention")) |>
+  set_header_labels(values = list(
+                         `mod_names[-1]` = "Interventions",
+                         costs_2 = "Discounted Net Present Costs \n in Millions (%)",
+                         deaths_2 = "Deaths (%)",
+                         oddeaths_2 = "Overdose-related Deaths (%)")) |>
+  theme_vanilla() |>
+  set_table_properties(layout = "autofit") |>
+  align_text_col(align = "center", header = TRUE, footer = TRUE)
+```
+
+```{r}
+tbl_effect_plot1 <- cbind.data.frame(Intervention = mod_names[-1], cost_diff_per,
+                                    deaths_diff_per, od_deaths_diff_per) %>% 
+  pivot_longer(2:4, names_to = "group", values_to = "percent_change") %>% 
+  mutate(scenario = "Scenario 1") %>% 
+  bind_rows(., cbind.data.frame(Intervention = mod_names[-1], cost_diff_per_2,
+                                    deaths_diff_per_2, od_deaths_diff_per_2) %>% 
+  pivot_longer(2:4, names_to = "group", values_to = "percent_change") %>% 
+  mutate(scenario = "Scenario 2")) %>% 
+  mutate(group = ifelse(group == "cost_diff_per_2", "cost_diff_per",
+                        ifelse(group == "deaths_diff_per_2", "deaths_diff_per",
+                               ifelse(group == "od_deaths_diff_per_2", "od_deaths_diff_per", group))))
+```
+
+##### Scenario 1
+
+```{r}
+p7 <- ggplot(data = tbl_effect_plot1 %>% 
+               filter(scenario == "Scenario 1"), aes(x = group, y = percent_change))+
+  geom_point(aes(colour = Intervention, shape = scenario), size = 1.5) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_shape_manual(values = c(15, 16)) +
+    geom_hline(yintercept = 0) +
+  ylab("Percent Change Compared to No Intervention (%)") +
+  xlab("") +
+  scale_x_discrete(name ="", 
+                    labels=c("Costs","Deaths","OD-releated Deaths"))+
+  theme_minimal()
+
+ggplotly(p7)
+```
+
+##### Scenario 2
+
+```{r}
+p8 <- ggplot(data = tbl_effect_plot1 %>% 
+               filter(scenario == "Scenario 2"), aes(x = group, y = percent_change))+
+  geom_point(aes(colour = Intervention, shape = scenario), size = 1.5) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_shape_manual(values = c(15, 16)) +
+    geom_hline(yintercept = 0) +
+  ylab("Percent Change Compared to No Intervention (%)") +
+  xlab("") +
+  scale_x_discrete(name ="", 
+                    labels=c("Costs","Deaths","OD-releated Deaths"))+
+  theme_minimal()
+
+ggplotly(p8)
+```
+
+##### Both
+
+```{r}
+ggplotly(ggplot(data = tbl_effect_plot1, aes(x = group, y = percent_change))+
+  geom_point(aes(colour = Intervention, shape = scenario), size = 1.5) +
+  scale_color_brewer(palette = "Dark2") +
+  # scale_shape_manual(values = c(15, 16, 17, 18)) +
+  scale_shape_manual(values = c(15, 16)) +
+    geom_hline(yintercept = 0) +
+  ylab("Percent Change Compared to No Intervention (%)") +
+  xlab("") +
+  scale_x_discrete(name ="", 
+                    labels=c("Costs","Deaths","OD-releated Deaths"))+
+    theme_bw() +
+    facet_wrap(~scenario))
+```
+
+```{r}
+tbl_effect_plot2 <- cbind.data.frame(Intervention = mod_names[-1], cost_diff_per,
+                                     od_deaths_diff_per) %>% 
+  mutate(scenario = "Scenario 1") %>% 
+  bind_rows(., cbind.data.frame(Intervention = mod_names[-1], cost_diff_per_2,
+                                     od_deaths_diff_per_2) %>%
+              rename(cost_diff_per = "cost_diff_per_2",
+                     od_deaths_diff_per = "od_deaths_diff_per_2") %>% 
+              mutate(scenario = "Scenario 2"))
+```
+
+##### Scenario 1
+
+```{r}
+p9 <- ggplot(data = tbl_effect_plot2 %>% filter(scenario == "Scenario 1"),
+             aes(x = cost_diff_per, y = od_deaths_diff_per))+
+  geom_point(aes(color = Intervention, shape = scenario)) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_shape_manual(values = c(15, 16)) +
+    geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  xlab("Mean Change in Costs Compared to No Intervention (%)") +
+  ylab("Mean Change in Overdose-related deaths \n Compared to No Intervention (%)") +
+  theme_minimal()
+
+ggplotly(p9)
+```
+
+##### Scenario 2
+
+```{r}
+p10 <- ggplot(data = tbl_effect_plot2 %>% filter(scenario == "Scenario 2"),
+             aes(x = cost_diff_per, y = od_deaths_diff_per))+
+  geom_point(aes(color = Intervention, shape = scenario)) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_shape_manual(values = c(15, 16)) +
+    geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  xlab("Mean Change in Costs Compared to No Intervention (%)") +
+  ylab("Mean Change in Overdose-related deaths \n Compared to No Intervention (%)") +
+  theme_minimal()
+
+ggplotly(p10)
+```
+
+##### Both
+
+```{r}
+ggplotly(ggplot(data = tbl_effect_plot2, aes(x = cost_diff_per, y = od_deaths_diff_per))+
+  geom_point(aes(color = Intervention, shape = scenario)) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_shape_manual(values = c(15, 16)) +
+    geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  xlab("Mean Change in Costs Compared to No Intervention (%)") +
+  ylab("Mean Change in Overdose-related deaths \n Compared to No Intervention (%)") +
+  theme_bw() +
+    facet_wrap(~scenario))
+```
+
+## Secondary Outcomes
+
+```{r}
+v_yrs_prev <- c(2015:2029)
+yrs_prev <- length(v_yrs_prev_rx)
+
+
+prev_fun <- function(mod, i, v_states){
+  
+  prop_uncalib <- data.frame(matrix(NA,byrow = T, nrow = 12, 
+                                             ncol = yrs_prev,
+                                             list(NULL,
+                                                  paste0("prop_",
+                                                         str_sub(v_yrs_prev, 3, 4)))))
+  
+  tot_pop_uncalib_tbl <- data.frame(matrix(NA,byrow = T, nrow = 12, 
+                                             ncol = yrs_prev,
+                                 list(NULL,
+                                      paste0("tot_pop_",
+                                             str_sub(v_yrs_prev, 3, 4)))))
+  
+  for (j in 1:yrs_prev) {
+    yr <- (v_yrs_prev[1] - 1) + j
+    
+    
+    if (length(v_states) > 1)
+      {
+      prop_uncalib[, j] <- assign(
+        paste0("prop_", str_sub(yr, 3, 4)),
+        rowSums(mod$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr] + 1,
+                             v_states]) /
+          rowSums(mod$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr] + 1,])
+        )
+    } else {
+      prop_uncalib[, j] <- assign(
+      paste0("prop_", str_sub(yr, 3, 4)),
+      mod$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr] + 1,
+                             v_states]) /
+      rowSums(mod$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr] + 1,])
+    
+    }
+    
+    
+  
+  tot_pop_uncalib_tbl[, j] <- assign(
+    paste0("tot_pop_", str_sub(yr, 3, 4)),
+    rowSums(mod$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr] + 1,])
+  )
+  
+  }
+  
+  # final table for monthly prevalence over 15 years
+  prop_uncalib_tbl <- prop_uncalib %>% 
+    pivot_longer(1:15, names_to = "grp", values_to = "value") %>% 
+    arrange(grp) %>% 
+    mutate(year = rep(v_yrs_prev,
+                              each = 12),
+         year_mon = paste(year, month.abb[1:12], sep = "_")) %>% 
+  bind_cols(., tot_pop_uncalib_tbl %>% 
+              pivot_longer(1:15, names_to = "tot_pop",
+                           values_to = "tot_pop_val") %>% 
+              arrange(tot_pop) %>% select(-tot_pop)) %>% 
+    mutate(intervention = mod_names[i])
+  
+  # table with weighted yearly prevalence
+  prop_uncalib_wei_mean <- prop_uncalib_tbl %>% 
+    group_by(year) %>% 
+    summarise(value = weighted.mean(value, tot_pop_val)) %>% 
+    ungroup() %>% 
+    mutate(intervention = mod_names[i]) 
+  
+  return (list(prop_uncalib_tbl = prop_uncalib_tbl,
+               prop_uncalib_wei_mean = prop_uncalib_wei_mean))
+}
+```
+
+
+## Severe Brain injury
+
+```{r}
+noint_prev_sevbi_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = "BO_SEVERE_BI")$prop_uncalib_tbl
+noint_prev_sevbi_yr_tbl <- prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = "BO_SEVERE_BI")$prop_uncalib_wei_mean
+nalx_prev_sevbi_mon_tbl <-  prev_fun(mod = mod_nalx_1, i = 2,
+                                       v_states = "BO_SEVERE_BI")$prop_uncalib_tbl
+nalx_prev_sevbi_yr_tbl <- prev_fun(mod = mod_nalx_1, i =2,
+                                       v_states = "BO_SEVERE_BI")$prop_uncalib_wei_mean
+ss_prev_sevbi_mon_tbl <-  prev_fun(mod = mod_ss_1, i = 3,
+                                       v_states = "BO_SEVERE_BI")$prop_uncalib_tbl
+ss_prev_sevbi_yr_tbl <- prev_fun(mod = mod_ss_1, i =3,
+                                       v_states = "BO_SEVERE_BI")$prop_uncalib_wei_mean
+pg_prev_sevbi_mon_tbl <-  prev_fun(mod = mod_pres_guid_1, i = 4,
+                                       v_states = "BO_SEVERE_BI")$prop_uncalib_tbl
+pg_prev_sevbi_yr_tbl <- prev_fun(mod = mod_pres_guid_1, i =4,
+                                       v_states = "BO_SEVERE_BI")$prop_uncalib_wei_mean
+allint_prev_sevbi_mon_tbl <-  prev_fun(mod = mod_all_int_1, i = 5,
+                                       v_states = "BO_SEVERE_BI")$prop_uncalib_tbl
+allint_prev_sevbi_yr_tbl <- prev_fun(mod = mod_all_int_1, i =5,
+                                       v_states = "BO_SEVERE_BI")$prop_uncalib_wei_mean
+
+
+prev_sevbi_mon_tbl <- noint_prev_sevbi_mon_tbl %>% 
+  bind_rows(., nalx_prev_sevbi_mon_tbl, ss_prev_sevbi_mon_tbl,
+            pg_prev_sevbi_mon_tbl, allint_prev_sevbi_mon_tbl)
+
+prev_sevbi_yr_tbl <- noint_prev_sevbi_yr_tbl %>% 
+  bind_rows(., nalx_prev_sevbi_yr_tbl, ss_prev_sevbi_yr_tbl,
+            pg_prev_sevbi_yr_tbl, allint_prev_sevbi_yr_tbl) 
+
+prev_sevbi_mon_tbl$year_mon <- factor(prev_sevbi_mon_tbl$year_mon,
+                                              levels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"
+                                                  ), 5),
+                                              labels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"), 5))
+
+ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% "BO_SEVERE_BI") %>%
+           filter(scenario == "Scenario 1") %>% 
+           left_join(., year_mon_cycle_tbl, by = c("cycle_num" = "cycle")),
+         aes(x = cycle_num, y = count, colour = mod, key = year)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  scale_color_manual(values = colors_pal, name = "Intervention"))
+
+ggplotly(ggplot() +
+  geom_point(data = prev_sevbi_yr_tbl,
+             aes(x = factor(year), y = value,
+                 color = intervention, fill = intervention)) +
+  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of severe brain injury") +
+  scale_fill_discrete(name = "Intervention")+
+  scale_color_discrete(name = "Intervention")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+```
+
+## Prevalence of moderate Brain injury
+
+```{r}
+noint_prev_modbi_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = "BO_MOD_BI")$prop_uncalib_tbl
+noint_prev_modbi_yr_tbl <- prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = "BO_MOD_BI")$prop_uncalib_wei_mean
+nalx_prev_modbi_mon_tbl <-  prev_fun(mod = mod_nalx_1, i = 2,
+                                       v_states = "BO_MOD_BI")$prop_uncalib_tbl
+nalx_prev_modbi_yr_tbl <- prev_fun(mod = mod_nalx_1, i =2,
+                                       v_states = "BO_MOD_BI")$prop_uncalib_wei_mean
+ss_prev_modbi_mon_tbl <-  prev_fun(mod = mod_ss_1, i = 3,
+                                       v_states = "BO_MOD_BI")$prop_uncalib_tbl
+ss_prev_modbi_yr_tbl <- prev_fun(mod = mod_ss_1, i =3,
+                                       v_states = "BO_MOD_BI")$prop_uncalib_wei_mean
+pg_prev_modbi_mon_tbl <-  prev_fun(mod = mod_pres_guid_1, i = 4,
+                                       v_states = "BO_MOD_BI")$prop_uncalib_tbl
+pg_prev_modbi_yr_tbl <- prev_fun(mod = mod_pres_guid_1, i =4,
+                                       v_states = "BO_MOD_BI")$prop_uncalib_wei_mean
+allint_prev_modbi_mon_tbl <-  prev_fun(mod = mod_all_int_1, i = 5,
+                                       v_states = "BO_MOD_BI")$prop_uncalib_tbl
+allint_prev_modbi_yr_tbl <- prev_fun(mod = mod_all_int_1, i =5,
+                                       v_states = "BO_MOD_BI")$prop_uncalib_wei_mean
+
+
+prev_modbi_mon_tbl <- noint_prev_modbi_mon_tbl %>% 
+  bind_rows(., nalx_prev_modbi_mon_tbl, ss_prev_modbi_mon_tbl,
+            pg_prev_modbi_mon_tbl, allint_prev_modbi_mon_tbl)
+
+prev_modbi_yr_tbl <- noint_prev_modbi_yr_tbl %>% 
+  bind_rows(., nalx_prev_modbi_yr_tbl, ss_prev_modbi_yr_tbl,
+            pg_prev_modbi_yr_tbl, allint_prev_modbi_yr_tbl) 
+
+prev_modbi_mon_tbl$year_mon <- factor(prev_modbi_mon_tbl$year_mon,
+                                              levels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"
+                                                  ), 5),
+                                              labels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"), 5))
+
+ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% "BO_MOD_BI") %>%
+           filter(scenario == "Scenario 1") %>% 
+           group_by(cycle_num, mod) %>% 
+           summarize(count = sum(count)) %>% 
+           ungroup() %>% 
+           left_join(., year_mon_cycle_tbl, by = c("cycle_num" = "cycle")),
+         aes(x = cycle_num, y = count, colour = mod, key = year)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  scale_color_manual(values = colors_pal, name = "Intervention"))
+
+ggplotly(ggplot() +
+  geom_point(data = prev_modbi_yr_tbl,
+             aes(x = factor(year), y = value,
+                 color = intervention, fill = intervention)) +
+  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of moderate brain injury") +
+  scale_fill_discrete(name = "Intervention")+
+  scale_color_discrete(name = "Intervention")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+
+```
+
+
+## Prevalence of substance use treatment
+
+```{r}
+v_states_prev_tx <- c("BS_DETOX", "BS_OAT_INI", "BS_OAT_MAINT",
+                          "BS_OAT_SS", "BS_SS", "BR_OAT_INI", "BR_OAT_MAINT",
+                          "BR_OAT_SS", "BR_SS")
+
+noint_prev_tx_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = v_states_prev_tx)$prop_uncalib_tbl
+noint_prev_tx_yr_tbl <- prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = v_states_prev_tx)$prop_uncalib_wei_mean
+nalx_prev_tx_mon_tbl <-  prev_fun(mod = mod_nalx_1, i = 2,
+                                       v_states = v_states_prev_tx)$prop_uncalib_tbl
+nalx_prev_tx_yr_tbl <- prev_fun(mod = mod_nalx_1, i =2,
+                                       v_states = v_states_prev_tx)$prop_uncalib_wei_mean
+ss_prev_tx_mon_tbl <-  prev_fun(mod = mod_ss_1, i = 3,
+                                       v_states = v_states_prev_tx)$prop_uncalib_tbl
+ss_prev_tx_yr_tbl <- prev_fun(mod = mod_ss_1, i =3,
+                                       v_states = v_states_prev_tx)$prop_uncalib_wei_mean
+pg_prev_tx_mon_tbl <-  prev_fun(mod = mod_pres_guid_1, i = 4,
+                                       v_states = v_states_prev_tx)$prop_uncalib_tbl
+pg_prev_tx_yr_tbl <- prev_fun(mod = mod_pres_guid_1, i =4,
+                                       v_states = v_states_prev_tx)$prop_uncalib_wei_mean
+allint_prev_tx_mon_tbl <-  prev_fun(mod = mod_all_int_1, i = 5,
+                                       v_states = v_states_prev_tx)$prop_uncalib_tbl
+allint_prev_tx_yr_tbl <- prev_fun(mod = mod_all_int_1, i =5,
+                                       v_states = v_states_prev_tx)$prop_uncalib_wei_mean
+
+
+prev_tx_mon_tbl <- noint_prev_tx_mon_tbl %>% 
+  bind_rows(., nalx_prev_tx_mon_tbl, ss_prev_tx_mon_tbl,
+            pg_prev_tx_mon_tbl, allint_prev_tx_mon_tbl)
+
+prev_tx_yr_tbl <- noint_prev_tx_yr_tbl %>% 
+  bind_rows(., nalx_prev_tx_yr_tbl, ss_prev_tx_yr_tbl,
+            pg_prev_tx_yr_tbl, allint_prev_tx_yr_tbl) 
+
+prev_tx_mon_tbl$year_mon <- factor(prev_tx_mon_tbl$year_mon,
+                                              levels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"
+                                                  ), 5),
+                                              labels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"), 5))
+
+
+ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% v_states_prev_tx) %>%
+           filter(scenario == "Scenario 1") %>% 
+           group_by(cycle_num, mod) %>% 
+           summarize(count = sum(count)) %>% 
+           ungroup() %>% 
+           left_join(., year_mon_cycle_tbl, by = c("cycle_num" = "cycle")),
+         aes(x = cycle_num, y = count, colour = mod, key = year)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  scale_color_manual(values = colors_pal, name = "Intervention"))
+
+ggplotly(ggplot() +
+  geom_point(data = prev_tx_yr_tbl,
+             aes(x = factor(year), y = value,
+                 color = intervention, fill = intervention)) +
+  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of substance use treatment") +
+  scale_fill_discrete(name = "Intervention")+
+  scale_color_discrete(name = "Intervention")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+```
+
+## Prevalence of prescription opioid use
+```{r}
+prop_opioids_rx_target_tbl <- calib_target_tbl %>% 
+              filter(group == "prev_on_opioidsrx") %>% 
+              select(year, target) %>% 
+              rename(value = target) %>% 
+              mutate(year_mon = paste(year, month.abb[7], sep = "_"))
+  
+v_states_prev_rx_opd <- c("BPO_ACUTE", "BPO_CHRONIC", "BPO_CANCER",
+                               "BPO_OTHER", "BPO_PALLIATIVE")
+
+
+noint_prev_rx_opd_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = v_states_prev_rx_opd)$prop_uncalib_tbl
+noint_prev_rx_opd_yr_tbl <- prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = v_states_prev_rx_opd)$prop_uncalib_wei_mean
+nalx_prev_rx_opd_mon_tbl <-  prev_fun(mod = mod_nalx_1, i = 2,
+                                       v_states = v_states_prev_rx_opd)$prop_uncalib_tbl
+nalx_prev_rx_opd_yr_tbl <- prev_fun(mod = mod_nalx_1, i =2,
+                                       v_states = v_states_prev_rx_opd)$prop_uncalib_wei_mean
+ss_prev_rx_opd_mon_tbl <-  prev_fun(mod = mod_ss_1, i = 3,
+                                       v_states = v_states_prev_rx_opd)$prop_uncalib_tbl
+ss_prev_rx_opd_yr_tbl <- prev_fun(mod = mod_ss_1, i =3,
+                                       v_states = v_states_prev_rx_opd)$prop_uncalib_wei_mean
+pg_prev_rx_opd_mon_tbl <-  prev_fun(mod = mod_pres_guid_1, i = 4,
+                                       v_states = v_states_prev_rx_opd)$prop_uncalib_tbl
+pg_prev_rx_opd_yr_tbl <- prev_fun(mod = mod_pres_guid_1, i =4,
+                                       v_states = v_states_prev_rx_opd)$prop_uncalib_wei_mean
+allint_prev_rx_opd_mon_tbl <-  prev_fun(mod = mod_all_int_1, i = 5,
+                                       v_states = v_states_prev_rx_opd)$prop_uncalib_tbl
+allint_prev_rx_opd_yr_tbl <- prev_fun(mod = mod_all_int_1, i =5,
+                                       v_states = v_states_prev_rx_opd)$prop_uncalib_wei_mean
+  
+
+prev_rx_opd_mon_tbl <- noint_prev_rx_opd_mon_tbl %>% 
+  bind_rows(., nalx_prev_rx_opd_mon_tbl, ss_prev_rx_opd_mon_tbl,
+            pg_prev_rx_opd_mon_tbl, allint_prev_rx_opd_mon_tbl) %>% 
+    bind_rows(., prop_opioids_rx_target_tbl %>% 
+              select(year, value, year_mon) %>% 
+              mutate(intervention = "Target"))
+
+prev_rx_opd_yr_tbl <- noint_prev_rx_opd_yr_tbl %>% 
+  bind_rows(., nalx_prev_rx_opd_yr_tbl, ss_prev_rx_opd_yr_tbl,
+            pg_prev_rx_opd_yr_tbl, allint_prev_rx_opd_yr_tbl) %>% 
+    bind_rows(., prop_opioids_rx_target_tbl %>% 
+              select(year, value) %>% 
+              mutate(intervention = "Target"))
+
+prev_rx_opd_mon_tbl$year_mon <- factor(prev_rx_opd_mon_tbl$year_mon,
+                                              levels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"
+                                                  ), 5),
+                                              labels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"), 5))
+
+prop_opioids_rx_target_tbl$year_mon <- factor(prop_opioids_rx_target_tbl$year_mon,
+                                              levels = paste(rep(v_yrs_prev,
+                                                                 each = 12),
+                                                             month.abb[1:12],
+                                                             sep = "_"),
+                                              labels = paste(rep(v_yrs_prev,
+                                                                 each = 12),
+                                                             month.abb[1:12],
+                                                             sep = "_"))
+
+ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% c("BPO_ACUTE", "BPO_CHRONIC", "BPO_CANCER",
+                               "BPO_OTHER", "BPO_PALLIATIVE")) %>%
+           filter(scenario == "Scenario 1") %>% 
+           group_by(cycle_num, mod) %>% 
+           summarize(count = sum(count)) %>% 
+           ungroup() %>% 
+           left_join(., year_mon_cycle_tbl, by = c("cycle_num" = "cycle")),
+         aes(x = cycle_num, y = count, colour = mod, key = year)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  scale_color_manual(values = colors_pal, name = "Intervention"))
+
+ggplotly(ggplot() +
+  geom_point(data = prev_rx_opd_yr_tbl,
+             aes(x = factor(year), y = value,
+                 color = intervention, fill = intervention)) +
+  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of prescription opioid use") +
+  scale_fill_discrete(name = "Intervention")+
+  scale_color_discrete(name = "Intervention")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+```
+
+## Prevalence of illicit use
+```{r}
+v_states_illicit <- c("BI_ILLICIT", "BR_ILLICIT")
+noint_prev_illicituse_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = v_states_illicit)$prop_uncalib_tbl
+noint_prev_illicituse_yr_tbl <- prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = v_states_illicit)$prop_uncalib_wei_mean
+nalx_prev_illicituse_mon_tbl <-  prev_fun(mod = mod_nalx_1, i = 2,
+                                       v_states = v_states_illicit)$prop_uncalib_tbl
+nalx_prev_illicituse_yr_tbl <- prev_fun(mod = mod_nalx_1, i =2,
+                                       v_states = v_states_illicit)$prop_uncalib_wei_mean
+ss_prev_illicituse_mon_tbl <-  prev_fun(mod = mod_ss_1, i = 3,
+                                       v_states = v_states_illicit)$prop_uncalib_tbl
+ss_prev_illicituse_yr_tbl <- prev_fun(mod = mod_ss_1, i =3,
+                                       v_states = v_states_illicit)$prop_uncalib_wei_mean
+pg_prev_illicituse_mon_tbl <-  prev_fun(mod = mod_pres_guid_1, i = 4,
+                                       v_states = v_states_illicit)$prop_uncalib_tbl
+pg_prev_illicituse_yr_tbl <- prev_fun(mod = mod_pres_guid_1, i =4,
+                                       v_states = v_states_illicit)$prop_uncalib_wei_mean
+allint_prev_illicituse_mon_tbl <-  prev_fun(mod = mod_all_int_1, i = 5,
+                                       v_states = v_states_illicit)$prop_uncalib_tbl
+allint_prev_illicituse_yr_tbl <- prev_fun(mod = mod_all_int_1, i =5,
+                                       v_states = v_states_illicit)$prop_uncalib_wei_mean
+
+
+prev_illicituse_mon_tbl <- noint_prev_illicituse_mon_tbl %>% 
+  bind_rows(., nalx_prev_illicituse_mon_tbl, ss_prev_illicituse_mon_tbl,
+            pg_prev_illicituse_mon_tbl, allint_prev_illicituse_mon_tbl)
+
+prev_illicituse_yr_tbl <- noint_prev_illicituse_yr_tbl %>% 
+  bind_rows(., nalx_prev_illicituse_yr_tbl, ss_prev_illicituse_yr_tbl,
+            pg_prev_illicituse_yr_tbl, allint_prev_illicituse_yr_tbl) 
+
+prev_illicituse_mon_tbl$year_mon <- factor(prev_illicituse_mon_tbl$year_mon,
+                                              levels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"
+                                                  ), 5),
+                                              labels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"), 5))
+
+ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% v_states_illicit) %>%
+           filter(scenario == "Scenario 1") %>% 
+           group_by(cycle_num, mod) %>% 
+           summarize(count = sum(count)) %>% 
+           ungroup() %>% 
+           left_join(., year_mon_cycle_tbl, by = c("cycle_num" = "cycle")),
+         aes(x = cycle_num, y = count, colour = mod, key = year)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  scale_color_manual(values = colors_pal, name = "Intervention"))
+
+ggplotly(ggplot() +
+  geom_point(data = prev_illicituse_yr_tbl,
+             aes(x = factor(year), y = value,
+                 color = intervention, fill = intervention)) +
+  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of illicit opioid use") +
+  scale_fill_discrete(name = "Intervention")+
+  scale_color_discrete(name = "Intervention")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+```
+
+## Prevalence of misuse
+
+```{r}
+noint_prev_rxmisuse_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = "BPO_MISUSE")$prop_uncalib_tbl
+noint_prev_rxmisuse_yr_tbl <- prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = "BPO_MISUSE")$prop_uncalib_wei_mean
+nalx_prev_rxmisuse_mon_tbl <-  prev_fun(mod = mod_nalx_1, i = 2,
+                                       v_states = "BPO_MISUSE")$prop_uncalib_tbl
+nalx_prev_rxmisuse_yr_tbl <- prev_fun(mod = mod_nalx_1, i =2,
+                                       v_states = "BPO_MISUSE")$prop_uncalib_wei_mean
+ss_prev_rxmisuse_mon_tbl <-  prev_fun(mod = mod_ss_1, i = 3,
+                                       v_states = "BPO_MISUSE")$prop_uncalib_tbl
+ss_prev_rxmisuse_yr_tbl <- prev_fun(mod = mod_ss_1, i =3,
+                                       v_states = "BPO_MISUSE")$prop_uncalib_wei_mean
+pg_prev_rxmisuse_mon_tbl <-  prev_fun(mod = mod_pres_guid_1, i = 4,
+                                       v_states = "BPO_MISUSE")$prop_uncalib_tbl
+pg_prev_rxmisuse_yr_tbl <- prev_fun(mod = mod_pres_guid_1, i =4,
+                                       v_states = "BPO_MISUSE")$prop_uncalib_wei_mean
+allint_prev_rxmisuse_mon_tbl <-  prev_fun(mod = mod_all_int_1, i = 5,
+                                       v_states = "BPO_MISUSE")$prop_uncalib_tbl
+allint_prev_rxmisuse_yr_tbl <- prev_fun(mod = mod_all_int_1, i =5,
+                                       v_states = "BPO_MISUSE")$prop_uncalib_wei_mean
+
+
+prev_rxmisuse_mon_tbl <- noint_prev_rxmisuse_mon_tbl %>% 
+  bind_rows(., nalx_prev_rxmisuse_mon_tbl, ss_prev_rxmisuse_mon_tbl,
+            pg_prev_rxmisuse_mon_tbl, allint_prev_rxmisuse_mon_tbl)
+
+prev_rxmisuse_yr_tbl <- noint_prev_rxmisuse_yr_tbl %>% 
+  bind_rows(., nalx_prev_rxmisuse_yr_tbl, ss_prev_rxmisuse_yr_tbl,
+            pg_prev_rxmisuse_yr_tbl, allint_prev_rxmisuse_yr_tbl) 
+
+prev_rxmisuse_mon_tbl$year_mon <- factor(prev_rxmisuse_mon_tbl$year_mon,
+                                              levels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"
+                                                  ), 5),
+                                              labels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"), 5))
+
+ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% "BPO_MISUSE") %>%
+           filter(scenario == "Scenario 1") %>% 
+           group_by(cycle_num, mod) %>% 
+           summarize(count = sum(count)) %>% 
+           ungroup() %>% 
+           left_join(., year_mon_cycle_tbl, by = c("cycle_num" = "cycle")),
+         aes(x = cycle_num, y = count, colour = mod, key = year)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  scale_color_manual(values = colors_pal, name = "Intervention"))
+
+ggplotly(ggplot() +
+  geom_point(data = prev_rxmisuse_yr_tbl,
+             aes(x = factor(year), y = value,
+                 color = intervention, fill = intervention)) +
+  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of rx opioid misuse") +
+  scale_fill_discrete(name = "Intervention")+
+  scale_color_discrete(name = "Intervention")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+
+```
+
+## Prevalence of overdose
+
+```{r}
+v_states_od <- c("BO_OD_RX", "BO_OD_ILLICIT", "BR_OD_ILLICIT")
+noint_prev_od_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = v_states_od)$prop_uncalib_tbl
+noint_prev_od_yr_tbl <- prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = v_states_od)$prop_uncalib_wei_mean
+nalx_prev_od_mon_tbl <-  prev_fun(mod = mod_nalx_1, i = 2,
+                                       v_states = v_states_od)$prop_uncalib_tbl
+nalx_prev_od_yr_tbl <- prev_fun(mod = mod_nalx_1, i =2,
+                                       v_states = v_states_od)$prop_uncalib_wei_mean
+ss_prev_od_mon_tbl <-  prev_fun(mod = mod_ss_1, i = 3,
+                                       v_states = v_states_od)$prop_uncalib_tbl
+ss_prev_od_yr_tbl <- prev_fun(mod = mod_ss_1, i =3,
+                                       v_states = v_states_od)$prop_uncalib_wei_mean
+pg_prev_od_mon_tbl <-  prev_fun(mod = mod_pres_guid_1, i = 4,
+                                       v_states = v_states_od)$prop_uncalib_tbl
+pg_prev_od_yr_tbl <- prev_fun(mod = mod_pres_guid_1, i =4,
+                                       v_states = v_states_od)$prop_uncalib_wei_mean
+allint_prev_od_mon_tbl <-  prev_fun(mod = mod_all_int_1, i = 5,
+                                       v_states = v_states_od)$prop_uncalib_tbl
+allint_prev_od_yr_tbl <- prev_fun(mod = mod_all_int_1, i =5,
+                                       v_states = v_states_od)$prop_uncalib_wei_mean
+
+
+prev_od_mon_tbl <- noint_prev_od_mon_tbl %>% 
+  bind_rows(., nalx_prev_od_mon_tbl, ss_prev_od_mon_tbl,
+            pg_prev_od_mon_tbl, allint_prev_od_mon_tbl)
+
+prev_od_yr_tbl <- noint_prev_od_yr_tbl %>% 
+  bind_rows(., nalx_prev_od_yr_tbl, ss_prev_od_yr_tbl,
+            pg_prev_od_yr_tbl, allint_prev_od_yr_tbl) 
+
+prev_od_mon_tbl$year_mon <- factor(prev_od_mon_tbl$year_mon,
+                                              levels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"
+                                                  ), 5),
+                                              labels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"), 5))
+
+ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% v_states_od) %>%
+           filter(scenario == "Scenario 1") %>% 
+           group_by(cycle_num, mod) %>% 
+           summarize(count = sum(count)) %>% 
+           ungroup() %>% 
+           left_join(., year_mon_cycle_tbl, by = c("cycle_num" = "cycle")),
+         aes(x = cycle_num, y = count, colour = mod, key = year)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  scale_color_manual(values = colors_pal, name = "Intervention"))
+
+ggplotly(ggplot() +
+  geom_point(data = prev_od_yr_tbl,
+             aes(x = factor(year), y = value,
+                 color = intervention, fill = intervention)) +
+  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of opioid-related overdose") +
+  scale_fill_discrete(name = "Intervention")+
+  scale_color_discrete(name = "Intervention")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+
+```
+
+### prevalence of illicit overdose
+
+```{r}
+v_states_illicitod <- c("BO_OD_ILLICIT", "BR_OD_ILLICIT")
+noint_prev_illicitod_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = v_states_illicitod)$prop_uncalib_tbl
+noint_prev_illicitod_yr_tbl <- prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = v_states_illicitod)$prop_uncalib_wei_mean
+nalx_prev_illicitod_mon_tbl <-  prev_fun(mod = mod_nalx_1, i = 2,
+                                       v_states = v_states_illicitod)$prop_uncalib_tbl
+nalx_prev_illicitod_yr_tbl <- prev_fun(mod = mod_nalx_1, i =2,
+                                       v_states = v_states_illicitod)$prop_uncalib_wei_mean
+ss_prev_illicitod_mon_tbl <-  prev_fun(mod = mod_ss_1, i = 3,
+                                       v_states = v_states_illicitod)$prop_uncalib_tbl
+ss_prev_illicitod_yr_tbl <- prev_fun(mod = mod_ss_1, i =3,
+                                       v_states = v_states_illicitod)$prop_uncalib_wei_mean
+pg_prev_illicitod_mon_tbl <-  prev_fun(mod = mod_pres_guid_1, i = 4,
+                                       v_states = v_states_illicitod)$prop_uncalib_tbl
+pg_prev_illicitod_yr_tbl <- prev_fun(mod = mod_pres_guid_1, i =4,
+                                       v_states = v_states_illicitod)$prop_uncalib_wei_mean
+allint_prev_illicitod_mon_tbl <-  prev_fun(mod = mod_all_int_1, i = 5,
+                                       v_states = v_states_illicitod)$prop_uncalib_tbl
+allint_prev_illicitod_yr_tbl <- prev_fun(mod = mod_all_int_1, i =5,
+                                       v_states = v_states_illicitod)$prop_uncalib_wei_mean
+
+
+prev_illicitod_mon_tbl <- noint_prev_illicitod_mon_tbl %>% 
+  bind_rows(., nalx_prev_illicitod_mon_tbl, ss_prev_illicitod_mon_tbl,
+            pg_prev_illicitod_mon_tbl, allint_prev_illicitod_mon_tbl)
+
+prev_illicitod_yr_tbl <- noint_prev_illicitod_yr_tbl %>% 
+  bind_rows(., nalx_prev_illicitod_yr_tbl, ss_prev_illicitod_yr_tbl,
+            pg_prev_illicitod_yr_tbl, allint_prev_illicitod_yr_tbl) 
+
+prev_illicitod_mon_tbl$year_mon <- factor(prev_illicitod_mon_tbl$year_mon,
+                                              levels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"
+                                                  ), 5),
+                                              labels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"), 5))
+
+ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% v_states_illicitod) %>%
+           filter(scenario == "Scenario 1") %>% 
+           group_by(cycle_num, mod) %>% 
+           summarize(count = sum(count)) %>% 
+           ungroup() %>% 
+           left_join(., year_mon_cycle_tbl, by = c("cycle_num" = "cycle")),
+         aes(x = cycle_num, y = count, colour = mod, key = year)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  scale_color_manual(values = colors_pal, name = "Intervention"))
+
+ggplotly(ggplot() +
+  geom_point(data = prev_illicitod_yr_tbl,
+             aes(x = factor(year), y = value,
+                 color = intervention, fill = intervention)) +
+  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of illicit opioid-related overdose") +
+  scale_fill_discrete(name = "Intervention")+
+  scale_color_discrete(name = "Intervention")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+```
+
+### prevalence of rx overdose
+
+```{r}
+noint_prev_rxod_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = "BO_OD_RX")$prop_uncalib_tbl
+noint_prev_rxod_yr_tbl <- prev_fun(mod = mod_basecase, i = 1,
+                                       v_states = "BO_OD_RX")$prop_uncalib_wei_mean
+nalx_prev_rxod_mon_tbl <-  prev_fun(mod = mod_nalx_1, i = 2,
+                                       v_states = "BO_OD_RX")$prop_uncalib_tbl
+nalx_prev_rxod_yr_tbl <- prev_fun(mod = mod_nalx_1, i =2,
+                                       v_states = "BO_OD_RX")$prop_uncalib_wei_mean
+ss_prev_rxod_mon_tbl <-  prev_fun(mod = mod_ss_1, i = 3,
+                                       v_states = "BO_OD_RX")$prop_uncalib_tbl
+ss_prev_rxod_yr_tbl <- prev_fun(mod = mod_ss_1, i =3,
+                                       v_states = "BO_OD_RX")$prop_uncalib_wei_mean
+pg_prev_rxod_mon_tbl <-  prev_fun(mod = mod_pres_guid_1, i = 4,
+                                       v_states = "BO_OD_RX")$prop_uncalib_tbl
+pg_prev_rxod_yr_tbl <- prev_fun(mod = mod_pres_guid_1, i =4,
+                                       v_states = "BO_OD_RX")$prop_uncalib_wei_mean
+allint_prev_rxod_mon_tbl <-  prev_fun(mod = mod_all_int_1, i = 5,
+                                       v_states = "BO_OD_RX")$prop_uncalib_tbl
+allint_prev_rxod_yr_tbl <- prev_fun(mod = mod_all_int_1, i =5,
+                                       v_states = "BO_OD_RX")$prop_uncalib_wei_mean
+
+
+prev_rxod_mon_tbl <- noint_prev_rxod_mon_tbl %>% 
+  bind_rows(., nalx_prev_rxod_mon_tbl, ss_prev_rxod_mon_tbl,
+            pg_prev_rxod_mon_tbl, allint_prev_rxod_mon_tbl)
+
+prev_rxod_yr_tbl <- noint_prev_rxod_yr_tbl %>% 
+  bind_rows(., nalx_prev_rxod_yr_tbl, ss_prev_rxod_yr_tbl,
+            pg_prev_rxod_yr_tbl, allint_prev_rxod_yr_tbl) 
+
+prev_rxod_mon_tbl$year_mon <- factor(prev_rxod_mon_tbl$year_mon,
+                                              levels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"
+                                                  ), 5),
+                                              labels = rep(
+                                                paste(
+                                                  rep(v_yrs_prev,
+                                                      each = 12),
+                                                  month.abb[1:12],
+                                                  sep = "_"), 5))
+
+ggplotly(ggplot(trace_tbl %>% 
+         filter(state %in% "BO_OD_RX") %>%
+           filter(scenario == "Scenario 1") %>% 
+           group_by(cycle_num, mod) %>% 
+           summarize(count = sum(count)) %>% 
+           ungroup() %>% 
+           left_join(., year_mon_cycle_tbl, by = c("cycle_num" = "cycle")),
+         aes(x = cycle_num, y = count, colour = mod, key = year)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  scale_color_manual(values = colors_pal, name = "Intervention"))
+
+ggplotly(ggplot() +
+  geom_point(data = prev_rxod_yr_tbl,
+             aes(x = factor(year), y = value,
+                 color = intervention, fill = intervention)) +
+  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of rx opioid-related overdose") +
+  scale_fill_discrete(name = "Intervention")+
+  scale_color_discrete(name = "Intervention")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+
+```
+

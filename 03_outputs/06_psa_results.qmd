@@ -1,0 +1,573 @@
+---
+title: "PSA results"
+format:
+  html:
+    toc: true
+    number-sections: true
+    highlight-style: github
+    embed-resources: true
+editor: visual
+warning: false
+message: false
+code-fold: true
+fig-width: 9
+fig-height: 7
+---
+
+```{r}
+library(tidyverse)
+library(plotly)
+library(flextable)
+theme_set(theme_minimal())
+library(here)
+
+m_outcomes_psa <- readRDS(here("01_data/m_outcomes_psa.RDS"))
+point_est <- readRDS(here("point_estiamte.RDS"))
+total_death_oddeaths <- readRDS(here("total_deaths_oddeaths.RDS"))
+
+
+mod_names <- c("No Interventions", "Naloxone", "Safer Supply", "Prescription Guidelines", "All Interventions")
+mod_names <- factor(mod_names, levels = mod_names, labels = mod_names)
+```
+
+```{r}
+outcomes_psa_dt <- as.data.frame(m_outcomes_psa)
+
+diff_psa_dt <- outcomes_psa_dt %>% 
+  mutate(cost_diff_nalox = cost_diff_nalox/1000000,
+         cost_diff_ss = cost_diff_ss/1000000,
+         cost_diff_pg = cost_diff_pg/1000000,
+         cost_diff_all = cost_diff_all/1000000) %>% 
+  select(cost_diff_nalox, cost_diff_ss, cost_diff_pg, cost_diff_all,
+         death_diff_nalox, death_diff_ss, death_diff_pg, death_diff_all,
+         oddeath_diff_nalox, oddeath_diff_ss, oddeath_diff_pg, oddeath_diff_all) %>% 
+  pivot_longer(1:12, names_to = "group", values_to = "diff") %>% 
+  separate(col = group, into = c("grp", "type", "Intervention"), sep = "_") %>% 
+  select(-type) %>% 
+  mutate(Intervention = ifelse(Intervention == "nalox", "Naloxone",
+                               ifelse(Intervention == "ss", "Safer Supply",
+                                      ifelse(Intervention == "pg", "Prescription Guidelines", 
+                                             ifelse(Intervention == "all", "All Interventions", Intervention)))))
+
+point_est_diff <- point_est %>% 
+  select(cost_diff, deaths_diff, od_deaths_diff) %>% 
+  cbind.data.frame(Intervention = mod_names[-1]) %>% 
+  pivot_longer(1:3,names_to = "grp", values_to = "diff") %>% 
+  separate(grp, into = c("grp", "type"), sep = "_") %>% select(-type) %>% 
+  mutate(grp = ifelse(grp == "od", "oddeath", 
+                      ifelse(grp == "deaths", "death", grp)),
+         type = "Point Estimate")
+
+
+ggplotly(ggplot(data = diff_psa_dt %>% 
+         filter(grp == "oddeath"), aes(x = diff, fill = Intervention, color = Intervention)) + 
+  geom_density(alpha = 0.9)+
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2") +
+    xlab("Change in OD-related Deaths Compared to No Intervention") + ylab("") +
+    geom_vline(data = point_est_diff %>%
+                 filter(grp == "oddeath"), aes(xintercept = diff, linetype = type))+
+    labs(linetype = "") +
+  facet_wrap(~Intervention, scales = "free_y") +
+    theme_minimal())
+
+ggplotly(ggplot(data = diff_psa_dt %>% 
+         filter(grp == "death"), aes(x = diff, fill = Intervention, color = Intervention)) + 
+  geom_density(alpha = 0.9)+
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2") +
+    xlab("Change in Deaths Compared to No Intervention") + ylab("") +
+  geom_vline(data = point_est_diff %>%
+                 filter(grp == "death"), aes(xintercept = diff, linetype = type))+
+    labs(linetype = "") +
+  facet_wrap(~Intervention, scales = "free_y") +
+    theme_minimal())
+
+ggplotly(ggplot(data = diff_psa_dt %>% 
+         filter(grp == "cost"), aes(x = diff, fill = Intervention, color = Intervention)) + 
+  geom_density(alpha = 0.9)+
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2") +
+    xlab("Change in Costs Compared to No Intervention (in millions)") + ylab("") +
+  geom_vline(data = point_est_diff %>%
+                 filter(grp == "cost"), aes(xintercept = diff/1000000, linetype = type), linewidth = 0.5)+
+    labs(linetype = "") +
+  facet_wrap(~Intervention, scales = "free_y") +
+    theme_minimal())
+```
+
+```{r}
+diff_per_psa_dt <- outcomes_psa_dt %>% 
+  mutate(cost_diff_per_nalox = cost_diff_per_nalox,
+         cost_diff_per_ss = cost_diff_per_ss,
+         cost_diff_per_pg = cost_diff_per_pg,
+         cost_diff_per_all = cost_diff_per_all) %>% 
+  select(cost_diff_per_nalox, cost_diff_per_ss, cost_diff_per_pg, cost_diff_per_all,
+         death_diff_per_nalox, death_diff_per_ss, death_diff_per_pg, death_diff_per_all,
+         oddeath_diff_per_nalox, oddeath_diff_per_ss, oddeath_diff_per_pg, oddeath_diff_per_all) %>% 
+  pivot_longer(1:12, names_to = "group", values_to = "diff_per") %>% 
+  separate(col = group, into = c("grp", "type1", "type2", "Intervention"), sep = "_") %>% 
+  select(-type1, -type2)  %>% 
+  mutate(Intervention = ifelse(Intervention == "nalox", "Naloxone",
+                               ifelse(Intervention == "ss", "Safer Supply",
+                                      ifelse(Intervention == "pg", "Prescription Guidelines", 
+                                             ifelse(Intervention == "all", "All Interventions", Intervention)))))
+
+
+point_est_diff_per <- point_est %>% 
+  select(cost_diff_per, deaths_diff_per, od_deaths_diff_per) %>% 
+  cbind.data.frame(Intervention = mod_names[-1]) %>% 
+  pivot_longer(1:3,names_to = "grp", values_to = "diff") %>% 
+  separate(grp, into = c("grp", "type"), sep = "_") %>% select(-type) %>% 
+  mutate(grp = ifelse(grp == "od", "oddeath", 
+                      ifelse(grp == "deaths", "death", grp)),
+         type = "Point Estimate")
+
+
+ggplotly(ggplot(data = diff_per_psa_dt %>% 
+         filter(grp == "oddeath"), aes(x = diff_per, fill = Intervention, color = Intervention)) + 
+  geom_density(alpha = 0.9)+
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2") +
+    xlab("% Change in Opioid-related Overdose Deaths Compared to No Intervention") + ylab("") +
+   geom_vline(data = point_est_diff_per %>%
+                 filter(grp == "oddeath"), aes(xintercept = diff, linetype = type))+
+    labs(linetype = "") +
+  facet_wrap(~Intervention, scales = "free_y") +
+    theme_minimal())
+
+ggplotly(ggplot(data = diff_per_psa_dt %>% 
+         filter(grp == "death"), aes(x = diff_per, fill = Intervention, color = Intervention)) + 
+  geom_density(alpha = 0.9)+
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2") +
+    xlab("% Change in Deaths Compared to No Intervention") + ylab("") +
+     geom_vline(data = point_est_diff_per %>%
+                 filter(grp == "death"), aes(xintercept = diff, linetype = type))+
+    labs(linetype = "") +
+  facet_wrap(~Intervention, scales = "free_y") +
+    theme_minimal())
+
+ggplotly(ggplot(data = diff_per_psa_dt %>% 
+         filter(grp == "cost"), aes(x = diff_per, fill = Intervention, color = Intervention)) + 
+  geom_density(alpha = 0.9)+
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2") +
+    xlab("% Change in Costs Compared to No Intervention") + ylab("") +
+   geom_vline(data = point_est_diff_per %>%
+                 filter(grp == "cost"), aes(xintercept = diff, linetype = type))+
+    labs(linetype = "") +
+  facet_wrap(~Intervention, scales = "free_y") +
+    theme_minimal())
+```
+
+# Table
+
+## effect_tbl
+
+```{r}
+mean_cost_diff_nalox <- mean(m_outcomes_psa[, "cost_diff_nalox"])
+ci_cost_diff_nalox <- quantile(m_outcomes_psa[, "cost_diff_nalox"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_cost_diff_ss <- mean(m_outcomes_psa[, "cost_diff_ss"])
+ci_cost_diff_ss <- quantile(m_outcomes_psa[, "cost_diff_ss"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_cost_diff_pg <- mean(m_outcomes_psa[, "cost_diff_pg"])
+ci_cost_diff_pg <- quantile(m_outcomes_psa[, "cost_diff_pg"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_cost_diff_all <- mean(m_outcomes_psa[, "cost_diff_all"])
+ci_cost_diff_all <- quantile(m_outcomes_psa[, "cost_diff_all"],
+                                probs = c(0.025, 0.975, 0.5))
+
+
+mean_cost_diff <- c(paste0(round(ci_cost_diff_nalox[3]/1000000, 0), " [",
+                           round(ci_cost_diff_nalox[1]/1000000, 0),", ",
+                           round(ci_cost_diff_nalox[2]/1000000, 0), "]"),
+                    paste0(round(ci_cost_diff_ss[3]/1000000, 0), " [",
+                           round(ci_cost_diff_ss[1]/1000000, 0),", ",
+                           round(ci_cost_diff_ss[2]/1000000, 0), "]"),
+                    paste0(round(ci_cost_diff_pg[3]/1000000, 0), " [",
+                           round(ci_cost_diff_pg[1]/1000000, 0),", ",
+                           round(ci_cost_diff_pg[2]/1000000, 0), "]"),
+                    paste0(round(ci_cost_diff_all[3]/1000000, 0), " [",
+                           round(ci_cost_diff_all[1]/1000000, 0),", ",
+                           round(ci_cost_diff_all[2]/1000000, 0), "]"))
+
+
+mean_death_diff_nalox <- mean(m_outcomes_psa[, "death_diff_nalox"])
+ci_death_diff_nalox <- quantile(m_outcomes_psa[, "death_diff_nalox"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_death_diff_ss <- mean(m_outcomes_psa[, "death_diff_ss"])
+ci_death_diff_ss <- quantile(m_outcomes_psa[, "death_diff_ss"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_death_diff_pg <- mean(m_outcomes_psa[, "death_diff_pg"])
+ci_death_diff_pg <- quantile(m_outcomes_psa[, "death_diff_pg"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_death_diff_all <- mean(m_outcomes_psa[, "death_diff_all"])
+ci_death_diff_all <- quantile(m_outcomes_psa[, "death_diff_all"],
+                                probs = c(0.025, 0.975, 0.5))
+
+
+mean_death_diff <- c(paste0(round(ci_death_diff_nalox[3], 0), " [",
+                           round(ci_death_diff_nalox[1], 0),", ",
+                           round(ci_death_diff_nalox[2], 0), "]"),
+                    paste0(round(ci_death_diff_ss[3], 0), " [",
+                           round(ci_death_diff_ss[1], 0),", ",
+                           round(ci_death_diff_ss[2], 0), "]"),
+                    paste0(round(ci_death_diff_pg[3], 0), " [",
+                           round(ci_death_diff_pg[1], 0),", ",
+                           round(ci_death_diff_pg[2], 0), "]"),
+                    paste0(round(ci_death_diff_all[3], 0), " [",
+                           round(ci_death_diff_all[1], 0),", ",
+                           round(ci_death_diff_all[2], 0), "]"))
+
+mean_oddeath_diff_nalox <- mean(m_outcomes_psa[, "oddeath_diff_nalox"])
+ci_oddeath_diff_nalox <- quantile(m_outcomes_psa[, "oddeath_diff_nalox"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_oddeath_diff_ss <- mean(m_outcomes_psa[, "oddeath_diff_ss"])
+ci_oddeath_diff_ss <- quantile(m_outcomes_psa[, "oddeath_diff_ss"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_oddeath_diff_pg <- mean(m_outcomes_psa[, "oddeath_diff_pg"])
+ci_oddeath_diff_pg <- quantile(m_outcomes_psa[, "oddeath_diff_pg"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_oddeath_diff_all <- mean(m_outcomes_psa[, "oddeath_diff_all"])
+ci_oddeath_diff_all <- quantile(m_outcomes_psa[, "oddeath_diff_all"],
+                                probs = c(0.025, 0.975, 0.5))
+
+
+mean_oddeath_diff <- c(paste0(round(ci_oddeath_diff_nalox[3], 0), " [",
+                           round(ci_oddeath_diff_nalox[1], 0),", ",
+                           round(ci_oddeath_diff_nalox[2], 0), "]"),
+                    paste0(round(ci_oddeath_diff_ss[3], 0), " [",
+                           round(ci_oddeath_diff_ss[1], 0),", ",
+                           round(ci_oddeath_diff_ss[2], 0), "]"),
+                    paste0(round(ci_oddeath_diff_pg[3], 0), " [",
+                           round(ci_oddeath_diff_pg[1], 0),", ",
+                           round(ci_oddeath_diff_pg[2], 0), "]"),
+                    paste0(round(ci_oddeath_diff_all[3], 0), " [",
+                           round(ci_oddeath_diff_all[1], 0),", ",
+                           round(ci_oddeath_diff_all[2], 0), "]"))
+
+
+effects_tbl <- cbind.data.frame(mod_names[-1], mean_cost_diff,
+                                mean_death_diff, mean_oddeath_diff)
+
+effects_tbl |> 
+  flextable() |> 
+  add_header_row(colwidths = c(1, 3),
+                      values = c("", "Change Compared to No Intervention \n Median [95% Credible Intervals]")) |>
+  set_header_labels(values = list(
+                         `mod_names[-1]` = "Interventions",
+                         mean_cost_diff = "Discounted Net Present \n Costs in Millions ",
+                         mean_death_diff = "Deaths ",
+                         mean_oddeath_diff = "Opioid-related Overdose Deaths")) |>
+  theme_vanilla() |>
+  set_table_properties(layout = "autofit") |>
+  align_text_col(align = "center", header = TRUE, footer = TRUE)
+```
+
+## effect_tbl_per
+
+```{r}
+mean_cost_diff_per_nalox <- mean(m_outcomes_psa[, "cost_diff_per_nalox"])
+ci_cost_diff_per_nalox <- quantile(m_outcomes_psa[, "cost_diff_per_nalox"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_cost_diff_per_ss <- mean(m_outcomes_psa[, "cost_diff_per_ss"])
+ci_cost_diff_per_ss <- quantile(m_outcomes_psa[, "cost_diff_per_ss"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_cost_diff_per_pg <- mean(m_outcomes_psa[, "cost_diff_per_pg"])
+ci_cost_diff_per_pg <- quantile(m_outcomes_psa[, "cost_diff_per_pg"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_cost_diff_per_all <- mean(m_outcomes_psa[, "cost_diff_per_all"])
+ci_cost_diff_per_all <- quantile(m_outcomes_psa[, "cost_diff_per_all"],
+                                probs = c(0.025, 0.975, 0.5))
+
+
+mean_cost_diff_per <- c(paste0(round(ci_cost_diff_per_nalox[3], 2), " [",
+                           round(ci_cost_diff_per_nalox[1], 2),", ",
+                           round(ci_cost_diff_per_nalox[2], 2), "]%"),
+                    paste0(round(ci_cost_diff_per_ss[3], 2), " [",
+                           round(ci_cost_diff_per_ss[1], 2),", ",
+                           round(ci_cost_diff_per_ss[2], 2), "]%"),
+                    paste0(round(ci_cost_diff_per_pg[3], 2), " [",
+                           round(ci_cost_diff_per_pg[1], 2),", ",
+                           round(ci_cost_diff_per_pg[2], 2), "]%"),
+                    paste0(round(ci_cost_diff_per_all[3], 2), " [",
+                           round(ci_cost_diff_per_all[1], 2),", ",
+                           round(ci_cost_diff_per_all[2], 2), "]%"))
+
+
+mean_death_diff_per_nalox <- mean(m_outcomes_psa[, "death_diff_per_nalox"])
+ci_death_diff_per_nalox <- quantile(m_outcomes_psa[, "death_diff_per_nalox"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_death_diff_per_ss <- mean(m_outcomes_psa[, "death_diff_per_ss"])
+ci_death_diff_per_ss <- quantile(m_outcomes_psa[, "death_diff_per_ss"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_death_diff_per_pg <- mean(m_outcomes_psa[, "death_diff_per_pg"])
+ci_death_diff_per_pg <- quantile(m_outcomes_psa[, "death_diff_per_pg"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_death_diff_per_all <- mean(m_outcomes_psa[, "death_diff_per_all"])
+ci_death_diff_per_all <- quantile(m_outcomes_psa[, "death_diff_per_all"],
+                                probs = c(0.025, 0.975, 0.5))
+
+
+mean_death_diff_per <- c(paste0(round(ci_death_diff_per_nalox[3], 2), " [",
+                           round(ci_death_diff_per_nalox[1], 2),", ",
+                           round(ci_death_diff_per_nalox[2], 2), "]%"),
+                    paste0(round(ci_death_diff_per_ss[3], 2), " [",
+                           round(ci_death_diff_per_ss[1], 2),", ",
+                           round(ci_death_diff_per_ss[2], 2), "]%"),
+                    paste0(round(ci_death_diff_per_pg[3], 2), " [",
+                           round(ci_death_diff_per_pg[1], 2),", ",
+                           round(ci_death_diff_per_pg[2], 2), "]%"),
+                    paste0(round(ci_death_diff_per_all[3], 2), " [",
+                           round(ci_death_diff_per_all[1], 2),", ",
+                           round(ci_death_diff_per_all[2], 2), "]%"))
+
+mean_oddeath_diff_per_nalox <- mean(m_outcomes_psa[, "oddeath_diff_per_nalox"])
+ci_oddeath_diff_per_nalox <- quantile(m_outcomes_psa[, "oddeath_diff_per_nalox"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_oddeath_diff_per_ss <- mean(m_outcomes_psa[, "oddeath_diff_per_ss"])
+ci_oddeath_diff_per_ss <- quantile(m_outcomes_psa[, "oddeath_diff_per_ss"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_oddeath_diff_per_pg <- mean(m_outcomes_psa[, "oddeath_diff_per_pg"])
+ci_oddeath_diff_per_pg <- quantile(m_outcomes_psa[, "oddeath_diff_per_pg"],
+                                probs = c(0.025, 0.975, 0.5))
+
+mean_oddeath_diff_per_all <- mean(m_outcomes_psa[, "oddeath_diff_per_all"])
+ci_oddeath_diff_per_all <- quantile(m_outcomes_psa[, "oddeath_diff_per_all"],
+                                probs = c(0.025, 0.975, 0.5))
+
+
+mean_oddeath_diff_per <- c(paste0(round(ci_oddeath_diff_per_nalox[3], 2), " [",
+                           round(ci_oddeath_diff_per_nalox[1], 2),", ",
+                           round(ci_oddeath_diff_per_nalox[2], 2), "]%"),
+                    paste0(round(ci_oddeath_diff_per_ss[3], 2), " [",
+                           round(ci_oddeath_diff_per_ss[1], 2),", ",
+                           round(ci_oddeath_diff_per_ss[2], 2), "]%"),
+                    paste0(round(ci_oddeath_diff_per_pg[3], 2), " [",
+                           round(ci_oddeath_diff_per_pg[1], 2),", ",
+                           round(ci_oddeath_diff_per_pg[2], 2), "]%"),
+                    paste0(round(ci_oddeath_diff_per_all[3], 2), " [",
+                           round(ci_oddeath_diff_per_all[1], 2),", ",
+                           round(ci_oddeath_diff_per_all[2], 2), "]%"))
+
+
+effects_tbl_per <- cbind.data.frame(mod_names[-1], mean_cost_diff_per,
+                                mean_death_diff_per, mean_oddeath_diff_per)
+
+effects_tbl_per |> 
+  flextable() |> 
+  add_header_row(colwidths = c(1, 3),
+                      values = c("", "Percent Change Compared to No Intervention \n Median [95% Credible Intervals]")) |>
+  set_header_labels(values = list(
+                         `mod_names[-1]` = "Interventions",
+                         mean_cost_diff_per = "Discounted Net Present Costs",
+                         mean_death_diff_per = "Deaths ",
+                         mean_oddeath_diff_per = "Opioid-related Overdose Deaths")) |>
+  theme_vanilla() |>
+  set_table_properties(layout = "autofit") |>
+  align_text_col(align = "center", header = TRUE, footer = TRUE)
+```
+
+```{r}
+tbl_effect_plot1 <- cbind.data.frame(value = c("lb", "ub", "median"),
+                               ci_cost_diff_per_nalox, ci_cost_diff_per_ss,
+                               ci_cost_diff_per_pg, ci_cost_diff_per_all,
+                               ci_death_diff_per_nalox, ci_death_diff_per_ss,
+                               ci_death_diff_per_pg, ci_death_diff_per_all,
+                               ci_oddeath_diff_per_nalox, ci_oddeath_diff_per_ss,
+                               ci_oddeath_diff_per_pg, ci_oddeath_diff_per_all) %>% 
+  pivot_longer(2:13, names_to = "grp", values_to = "per_diff") %>% 
+  pivot_wider(names_from = "value", values_from = "per_diff") %>% 
+  separate(grp, into = c("type1", "group", "type2", "type3", "Intervention")) %>% 
+  select(-c(type1, type2, type3)) %>% 
+  mutate(Intervention = ifelse(Intervention == "nalox", "Naloxone",
+                               ifelse(Intervention == "ss", "Safer Supply",
+                                      ifelse(Intervention == "pg", "Prescription Guidelines", 
+                                             ifelse(Intervention == "all", "All Interventions", Intervention)))))
+  
+tbl_effect_plot1$Intervention <- factor(tbl_effect_plot1$Intervention, levels = mod_names, labels = mod_names)
+
+ggplotly(ggplot(data = tbl_effect_plot1, aes(x = group, y = median))+
+  geom_jitter(aes(color = Intervention, shape = Intervention), size = 2, position = position_dodge(0.25)) +
+    # geom_errorbar(aes(ymin = lb, ymax = ub, color = Intervention, shape = Intervention), width = 0.3, position = position_dodge(0.1)) +
+    geom_pointrange(aes(ymin = lb, ymax = ub, color = Intervention, shape = Intervention), position = position_dodge(0.25)) + 
+  scale_color_brewer(palette = "Dark2") +
+  scale_shape_manual(values = c(15, 16, 17, 18)) +
+  # scale_shape_manual(values = c(15, 16)) +
+    geom_hline(yintercept = 0) +
+  ylab("Percent Change Compared to No Intervention (%)") +
+  xlab("") +
+  scale_x_discrete(name ="", 
+                    labels=c("Costs","Deaths","Opioid-related Overdose Deaths"))+
+    theme_minimal())
+```
+
+```{r}
+tbl_effect_plot2 <- cbind.data.frame(value = c("cost_lb", "cost_ub", "cost_median"),
+                                     ci_cost_diff_per_nalox, ci_cost_diff_per_ss,
+                                     ci_cost_diff_per_pg, ci_cost_diff_per_all) %>% 
+  pivot_longer(2:5, names_to = "grp", values_to = "per_diff") %>%
+   pivot_wider(names_from = "value", values_from = "per_diff") %>% 
+  separate(grp, into = c("type1", "group", "type2", "type3", "Intervention")) %>% 
+  select(-c(type1, type2, type3, group)) %>% 
+  full_join(., cbind.data.frame(value = c("oddeath_lb", "oddeath_ub", "oddeath_median"),
+                                     ci_oddeath_diff_per_nalox, ci_oddeath_diff_per_ss,
+                                     ci_oddeath_diff_per_pg, ci_oddeath_diff_per_all) %>% 
+              pivot_longer(2:5, names_to = "grp", values_to = "per_diff") %>%
+              pivot_wider(names_from = "value", values_from = "per_diff") %>% 
+              separate(grp, into = c("type1", "group", "type2", "type3", "Intervention")) %>% 
+              select(-c(type1, type2, type3, group)), by = "Intervention") %>% 
+  mutate(Intervention = ifelse(Intervention == "nalox", "Naloxone",
+                               ifelse(Intervention == "ss", "Safer Supply",
+                                      ifelse(Intervention == "pg", "Prescription Guidelines", 
+                                             ifelse(Intervention == "all", "All Interventions", Intervention)))))
+  
+  tbl_effect_plot2$Intervention <- factor(tbl_effect_plot2$Intervention, levels = mod_names, labels = mod_names)
+
+
+ggplotly(ggplot(data = tbl_effect_plot2, aes(x = cost_median, y = oddeath_median)) +
+  geom_point(aes(color = Intervention), size = 1) +
+    geom_pointrange(aes(ymin = oddeath_lb, ymax = oddeath_ub, color = Intervention)) +
+  geom_errorbarh(aes(xmax = cost_lb, xmin = cost_ub,color = Intervention),  height = 0) +
+  scale_color_brewer(palette = "Dark2") +
+  # scale_shape_manual(values = c(15, 16, 17, 18)) +
+    geom_hline(yintercept = 0, linewidth = 0.25) +
+  geom_vline(xintercept = 0, linewidth = 0.25) +
+  xlab("Change in Costs Compared to No Intervention (%)") +
+  ylab("Change in Opioid-related Overdose Deaths \n Compared to No Intervention (%)") +
+  theme_minimal())
+```
+
+# Posterior distributions for total Deaths and total OD-deaths
+
+```{r}
+
+death_psa_dt <- outcomes_psa_dt %>% 
+  select(tot_death_no, tot_death_nalox, tot_death_ss, tot_death_pg, tot_death_all,
+         tot_oddeath_no, tot_oddeath_nalox, tot_oddeath_ss, tot_oddeath_pg, tot_oddeath_all) %>% 
+  pivot_longer(1:10, names_to = "group", values_to = "total") %>% 
+  separate(col = group, into = c("type", "grp", "Intervention"), sep = "_") %>% 
+  select(-type) %>% 
+  mutate(Intervention = ifelse(Intervention == "nalox", "Naloxone",
+                               ifelse(Intervention == "ss", "Safer Supply",
+                                      ifelse(Intervention == "pg", "Prescription Guidelines", 
+                                             ifelse(Intervention == "all", "All Interventions",
+                                                    ifelse(Intervention == "no", "No Interventions", Intervention))))))
+death_psa_dt$Intervention <- factor(death_psa_dt$Intervention,
+                                    levels = mod_names, labels = mod_names)
+
+total_death_oddeaths <- total_death_oddeaths %>% 
+  pivot_longer(3:7, names_to = "Intervention", values_to = "total") %>% 
+  mutate(grp = ifelse(state == "BO_OD_DEATH", "oddeath", "death"),
+         type = "Point Estimate") %>% 
+  select(-state)
+
+ggplot(data = death_psa_dt %>% 
+         filter(grp == "oddeath"), aes(x = total, fill = Intervention, color = Intervention)) + 
+  geom_density(alpha = 0.9)+
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2") +
+    xlab("Total Opioid-related Overdose Deaths after 15 years") + ylab("") +
+    geom_vline(data = total_death_oddeaths %>%
+                 filter(grp == "oddeath"), aes(xintercept = total, linetype = type), linewidth = 0.5)+
+    labs(linetype = "") +
+  facet_wrap(~Intervention, scales = "free_y") +
+    theme_minimal()
+
+ggplot(data = death_psa_dt %>% 
+         filter(grp == "death"), aes(x = total/1000, fill = Intervention, color = Intervention)) + 
+  geom_density(alpha = 0.9)+
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2") +
+    xlab("Total Deaths after 15 years (in thousands)") + ylab("") +
+  geom_vline(data = total_death_oddeaths %>%
+                 filter(grp == "death"), aes(xintercept = total/1000, linetype = type), linewidth = 0.5)+
+    labs(linetype = "") +
+  facet_wrap(~Intervention, scales = "free_y") +
+    theme_minimal()
+
+```
+
+# New OD Deaths per year
+
+```{r}
+outcomes_psa_dt_inci <- outcomes_psa_dt %>% 
+  select(35:104) 
+
+
+
+inci_od_dt <- data.frame(nm = rep(NA, length(outcomes_psa_dt_inci)),
+           med = rep(NA, length(outcomes_psa_dt_inci)),
+           lb = rep(NA, length(outcomes_psa_dt_inci)),
+           ub = rep(NA, length(outcomes_psa_dt_inci)))
+
+
+for (i in 1:length(outcomes_psa_dt_inci)){
+  inci_od_dt$nm[i] <- names(outcomes_psa_dt_inci)[i]
+  inci_od_dt[i, 2:4] <- as.numeric(quantile(outcomes_psa_dt_inci[i, ], c(0.5, 0.025, 0.975)))
+  
+}
+
+
+inc_od_death_tbl_mod <- readRDS("inc_od_death_tbl_mod.RDS") %>% 
+  filter(scenario == "Scenario 1") %>% 
+  select(-scenario) %>% 
+  rename(Intervention = intervention,
+         Year = year, 
+         value = inci_od_deaths) %>% 
+  mutate(grp = "Point Estimate")
+
+inci_od_dt_plot <- inci_od_dt %>% 
+  separate(nm, into = c("type", "type1", "Intervention", "Year"), sep = "_") %>% 
+  select(-c(type, type1)) %>%
+  rename(value = med) %>% 
+  mutate(Intervention = ifelse(Intervention == "nalox", "Naloxone",
+                               ifelse(Intervention == "ss", "Safer Supply",
+                                      ifelse(Intervention == "pg", "Prescription Guidelines", 
+                                             ifelse(Intervention == "all", "All Interventions",
+                                                    ifelse(Intervention == "no", "No Interventions", Intervention))))),
+         Year = c(rep(2016:2029, 5)),
+         grp = "PSA results") %>% 
+  bind_rows(., inc_od_death_tbl_mod) %>% 
+  mutate(newgrp = paste0(Intervention, "_", grp))
+
+inci_od_dt_plot$Intervention <- factor(inci_od_dt_plot$Intervention, levels = mod_names, labels = mod_names)
+
+
+inc_od_death_tbl_target <- readRDS("inc_od_death_tbl_target.RDS") %>% 
+  mutate(grp = "Target")
+
+
+
+
+ggplotly(ggplot(data = inci_od_dt_plot, aes(x = Year, y = value, color = grp, fill = grp)) +
+  geom_line() +
+  geom_point(data = inc_od_death_tbl_target, aes(x = year, y = inci_od_deaths, color = grp, fill = grp))+
+  scale_color_manual(values = RColorBrewer::brewer.pal(3, "Dark2")[c(1,3,2)]) +
+    scale_fill_manual(values = RColorBrewer::brewer.pal(3, "Dark2")[c(1,3, 2)]) +
+    # scale_color_brewer(palette = "Dark2") +
+  # scale_fill_brewer(palette = "Dark2") +
+    geom_ribbon(aes(ymin = lb, ymax = ub), alpha = 0.5) +
+  facet_wrap(~Intervention, scales = "free") +
+    theme(legend.title = element_blank()))
+
+```

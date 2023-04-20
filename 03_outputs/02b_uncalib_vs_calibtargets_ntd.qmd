@@ -1,0 +1,338 @@
+---
+title: "Comparison between uncalibrated model outcomes - no time dependent probabilities- and calibration targets"
+format:
+  html:
+    toc: true
+    number-sections: true
+    highlight-style: github
+    embed-resources: true
+editor: visual
+date: last-modified
+date-format: "DD/MM/YYYY THH:mm"
+fig-width: 20
+fig-height: 12
+warning: false
+message: false
+code-fold: true
+---
+
+```{r}
+library(here)
+library(RColorBrewer)
+source(here("02_scripts/01_fun_data.R"))
+calib_target_tbl <- read_excel(here("01_data/markov_model_parameters_preprior.xlsx"),
+                               sheet = "calibration_targets")
+theme_set(theme_minimal())
+```
+
+## Prevalence of Rx opioids use
+
+```{r}
+#| code-fold: true
+# prevalence of people on prescribed opioids
+
+v_yrs_prev_rx <- c(2015:2018)
+yrs_prev_rx <- length(v_yrs_prev_rx)
+
+prop_opioids_rx_uncalib <- data.frame(matrix(NA, byrow = T,
+                                             nrow = 12,
+                                             ncol = yrs_prev_rx,
+                                             list(NULL,
+                                                  paste0("prop_opioids_rx_",
+                                                         str_sub(v_yrs_prev_rx, 3, 4)))))
+tot_pop_uncalib_tbl <- data.frame(matrix(NA, byrow = T,
+                                         nrow = 12,
+                                         ncol = yrs_prev_rx,
+                                 list(NULL,
+                                      paste0("tot_pop_",
+                                             str_sub(v_yrs_prev_rx, 3, 4)))))
+
+for (i in 1:yrs_prev_rx) {
+  yr <- v_yrs_prev_rx[1] + i
+  prop_opioids_rx_uncalib[, i] <- assign(
+    paste0("prop_opioids_rx_", str_sub(yr, 3, 4)),
+    rowSums(mod_basecase_notimedep$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr] + 1,
+                             c("BPO_ACUTE", "BPO_CHRONIC", "BPO_CANCER",
+                               "BPO_OTHER", "BPO_PALLIATIVE")]) /
+      rowSums(mod_basecase_notimedep$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr] + 1,])
+    
+  )
+  
+  tot_pop_uncalib_tbl[, i] <- assign(
+    paste0("tot_pop_", str_sub(yr, 3, 4)),
+    rowSums(mod_basecase_notimedep$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr] + 1,])
+  )
+  }
+
+prop_opioids_rx_uncalib_tbl <- prop_opioids_rx_uncalib %>% 
+  pivot_longer(1:4, names_to = "grp", values_to = "target_val") %>% 
+  arrange(grp) %>% 
+  mutate(year = rep(v_yrs_prev_rx,
+                              each = 12),
+         year_mon = paste(year, month.abb[1:12], sep = "_")) %>% 
+  bind_cols(., tot_pop_uncalib_tbl %>% 
+              pivot_longer(1:4, names_to = "tot_pop",
+                           values_to = "tot_pop_val") %>% 
+              arrange(tot_pop) %>% select(-tot_pop))
+
+prop_opioids_rx_target_tbl <- calib_target_tbl %>% 
+              filter(group == "prev_on_opioidsrx") %>% 
+              select(year, target, group) %>% 
+              rename(grp = group,
+                     target_val = target) %>% 
+              mutate(year_mon = paste(year, month.abb[7], sep = "_"))
+
+prop_opioids_rx_uncalib_wei_mean <- prop_opioids_rx_uncalib_tbl %>% 
+  group_by(year) %>% 
+  summarise(target_val = weighted.mean(target_val, tot_pop_val)) %>% 
+  ungroup() %>% 
+  mutate(grp = "Model") %>% 
+  bind_rows(., prop_opioids_rx_target_tbl %>% 
+              select(year, target_val) %>% 
+              mutate(grp = "Target"))
+
+prop_opioids_rx_target_tbl$year_mon <- factor(prop_opioids_rx_target_tbl$year_mon,
+                                              levels = paste(rep(v_yrs_prev_rx,
+                                                                 each = 12),
+                                                             month.abb[1:12],
+                                                             sep = "_"),
+                                              labels = paste(rep(v_yrs_prev_rx,
+                                                                 each = 12),
+                                                             month.abb[1:12],
+                                                             sep = "_"))
+prop_opioids_rx_uncalib_tbl$year_mon <- factor(prop_opioids_rx_uncalib_tbl$year_mon,
+                                              levels = paste(rep(v_yrs_prev_rx,
+                                                                 each = 12),
+                                                             month.abb[1:12],
+                                                             sep = "_"),
+                                              labels = paste(rep(v_yrs_prev_rx,
+                                                                 each = 12),
+                                                             month.abb[1:12],
+                                                             sep = "_"))
+
+p1 <- ggplot() +
+  geom_point(data = prop_opioids_rx_uncalib_tbl,
+             aes(x = year_mon, y = target_val,
+                 color = factor(year), fill = factor(year))) +
+  geom_point(data = prop_opioids_rx_target_tbl,
+             aes(x = year_mon, y = target_val),
+             color = "red") +
+  geom_point(data = prop_opioids_rx_uncalib_tbl %>% 
+               group_by(year) %>% 
+               summarise(target_val = weighted.mean(target_val, tot_pop_val)) %>% 
+               ungroup() %>% 
+               mutate(year_mon = prop_opioids_rx_target_tbl$year_mon),
+             aes(x = year_mon, y = target_val),
+             color = "blue")+
+  xlab("Year_Month") + ylab("Prevalence of prescription opioid use") +
+  scale_fill_discrete(name = "year")+
+  scale_color_discrete(name = "year")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+plotly::ggplotly(p1)
+```
+
+The red points represent the observed target proportions of Rx opioids from CIHI report, the blue points represent an annual average (weighted by population during that month), the other coloured points represent monthly prevalence predicted from the model
+
+```{r}
+#| code-fold: true
+p2 <- ggplot() +
+  geom_point(data = prop_opioids_rx_uncalib_wei_mean,
+             aes(x = year, y = target_val, color = factor(grp),
+                 fill = factor(grp))) +
+  xlab("Year") + ylab("Prevalence of prescription opioid use")+
+  scale_color_brewer(palette = "Dark2", name = "") +
+  scale_fill_brewer(palette = "Dark2", name = "")
+  # ylim(0,0.2) +
+  # ggtitle("Comparison between uncalibrated annual weighted average and
+  #         observed targets of prevalence of Rx opioids use")
+
+plotly::ggplotly(p2)
+```
+
+## Deaths and OD-Deaths
+
+```{r fig.width=23, fig.height = 15}
+#| code-fold: true
+################ Deaths 
+# number of deaths
+v_yr1_deaths <- c(2016:2020)
+yrs_deaths <- length(v_yr1_deaths)
+
+num_deaths_uncalib <- rep(NA, yrs_deaths)
+for (i in 1:yrs_deaths){
+  yr <- (v_yr1_deaths[1] - 1) + i
+  num_deaths_uncalib[i] <- mod_basecase_notimedep$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                       year_mon_cycle_tbl$mon == 12] + 1,
+                                            "BO_DEATH"] -
+    mod_basecase_notimedep$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_DEATH"]
+  }
+  
+# number of OD-deaths
+v_yr1_oddeaths <- c(2016:2021)
+yrs_oddeaths <- length(v_yr1_oddeaths)
+
+num_od_deaths_uncalib <- rep(NA, yrs_oddeaths)
+for (i in 1:yrs_oddeaths){
+  yr <- (v_yr1_oddeaths[1] - 1) + i
+  num_od_deaths_uncalib[i] <- mod_basecase_notimedep$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                                          year_mon_cycle_tbl$mon == 12] + 1,
+                                               "BO_OD_DEATH"] -
+    mod_basecase_notimedep$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr - 1 &
+                                                year_mon_cycle_tbl$mon == 12] + 1,
+                     "BO_OD_DEATH"]
+}
+
+
+deaths_target_uncalib_tbl <- calib_target_tbl %>% 
+  select(year, target, group) %>% 
+  rename(target_val = target,
+         target = group) %>% 
+  filter(target %in% c("total_deaths", "total_od_deaths")) %>% 
+  mutate(target = ifelse(target == "total_deaths", "Total deaths",
+                         ifelse(target == "total_od_deaths",
+                                "Total opioid-related overdose deaths", NA)),
+         group = "Target") %>% 
+  bind_rows(., data.frame(target_val = num_deaths_uncalib) %>% 
+              mutate(target = "Total deaths") %>% 
+              bind_rows(., data.frame(target_val = num_od_deaths_uncalib) %>%
+                          mutate(target = "Total opioid-related overdose deaths")) %>% 
+              mutate(year = c(v_yr1_deaths, v_yr1_oddeaths),
+                     group = "Model"))
+
+p3 <- ggplot() +
+  geom_point(data = deaths_target_uncalib_tbl,
+             aes(x = year, y = target_val, color = factor(group),
+                 fill = factor(group))) +
+  xlab("Year") + ylab("Total Deaths") +
+  scale_color_brewer(palette = "Dark2", name = "")  +
+  scale_fill_brewer(palette = "Dark2", name = "") +
+  facet_wrap(~target, scales = "free") +
+  theme(legend.position="bottom")
+
+plotly::ggplotly(p3)
+
+plotly::ggplotly(ggplot() +
+  geom_point(data = deaths_target_uncalib_tbl %>% 
+               filter(target == "Total deaths"),
+             aes(x = year, y = target_val, color = factor(group),
+                 fill = factor(group))) +
+  xlab("Year") + ylab("Total Deaths") +
+  scale_color_brewer(palette = "Dark2", name = "")  +
+  scale_fill_brewer(palette = "Dark2", name = ""))
+  # facet_wrap(~target, scales = "free") + theme(legend.position="bottom")
+
+plotly::ggplotly(ggplot() +
+  geom_point(data = deaths_target_uncalib_tbl %>%
+               filter(target == "Total opioid-related overdose deaths"),
+             aes(x = year, y = target_val, color = factor(group),
+                 fill = factor(group))) +
+  xlab("Year") + ylab("Total opioid-related overdose deaths") +
+  scale_color_brewer(palette = "Dark2", name = "")  +
+  scale_fill_brewer(palette = "Dark2", name = ""))
+```
+
+## OAT
+
+```{r fig.width=23, fig.height = 15}
+# number of oat
+v_yr1_oat <- c(2018:2021)
+yrs_oat <- length(v_yr1_oat)
+  
+num_oat_uncalib <- rep(NA, yrs_oat)
+
+for (i in 1:yrs_oat){
+  yr <- (v_yr1_oat - 1) + i 
+    num_oat_uncalib[i] <- sum(mod_basecase_notimedep$m_M[year_mon_cycle_tbl$cycle[year_mon_cycle_tbl$year == yr &
+                                                        year_mon_cycle_tbl$mon == 6] + 1,
+                             c("BS_OAT_INI", "BS_OAT_MAINT", "BR_OAT_INI", "BR_OAT_MAINT")])
+}
+
+
+oat_target_uncalib_tbl <- calib_target_tbl %>% 
+  select(year, target, group) %>% 
+  rename(target_val = target,
+         target = group) %>% 
+  filter(target %in% "total_oat") %>% 
+  mutate(target = ifelse(target == "total_oat",
+                                "Total OAT", NA),
+         group = "Target") %>% 
+  bind_rows(., data.frame(target_val = num_oat_uncalib) %>%
+                          mutate(target = "Total OAT",
+                                 year = v_yr1_oat,
+                                 group = "Model"))
+
+p3 <- ggplot() +
+  geom_point(data = oat_target_uncalib_tbl,
+             aes(x = year, y = target_val, color = factor(group),
+                 fill = factor(group))) +
+  xlab("Year") + ylab("Total") +
+  scale_color_brewer(palette = "Dark2", name = "")  +
+  scale_fill_brewer(palette = "Dark2", name = "") +
+  theme(legend.position="bottom")
+
+
+
+plotly::ggplotly(p3)
+```
+
+## Trace plot
+
+```{r fig.width=18, fig.height=15}
+# build-in color palette
+set.seed(122345)
+colors_pal <- Polychrome::createPalette(n_states,
+                                        c("#084C61", "#DB504A",
+                                                   "#E3B505", "#4F6D7A", 
+                                                      "#56A3A6"))
+names(colors_pal) <- NULL
+
+
+trace_tbl_inc <- as_tibble(mod_basecase_notimedep$m_M) %>% 
+  mutate(cycle_num = 0:n_cycles) %>% 
+  pivot_longer(1:n_states, names_to = "state", values_to = "count")
+
+
+trace_tbl_inc$count[trace_tbl_inc$state == "BO_OD_DEATH" &
+                      trace_tbl_inc$cycle_num == 180] <- trace_tbl_inc$count[trace_tbl_inc$state == "BO_OD_DEATH" &
+                      trace_tbl_inc$cycle_num == 180] + mod_basecase_notimedep$extra_od_deaths
+
+trace_tbl_inc$count[trace_tbl_inc$state == "BO_MOD_BI" &
+                      trace_tbl_inc$cycle_num == 180] <- trace_tbl_inc$count[trace_tbl_inc$state == "BO_MOD_BI" &
+                      trace_tbl_inc$cycle_num == 180] + mod_basecase_notimedep$extra_mod_bi
+
+trace_tbl_inc$count[trace_tbl_inc$state == "BO_SEVERE_BI" &
+                      trace_tbl_inc$cycle_num == 180] <- trace_tbl_inc$count[trace_tbl_inc$state == "BO_SEVERE_BI" &
+                      trace_tbl_inc$cycle_num == 180] + mod_basecase_notimedep$extra_sev_bi
+
+trace_tbl_inc$state <- factor(trace_tbl_inc$state,
+                              levels = v_state_names,
+                              labels = v_state_names)
+p4 <- ggplot(trace_tbl_inc, aes(x = cycle_num, y = count, colour = state)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  ggrepel::geom_text_repel(data = trace_tbl_inc %>% filter(cycle_num == 180), 
+                  aes(x = cycle_num, y = count, label = state), 
+                  check_overlap = T, size = 3) +
+  scale_color_manual(values = colors_pal)
+
+plotly::ggplotly(p4)
+
+
+p5 <- ggplot(trace_tbl_inc %>% 
+               filter(state == "BO_OD_DEATH") %>% 
+               filter(cycle_num != 0) %>% 
+               filter((cycle_num + 1) %% 12 == 1) %>% 
+               mutate(year = c(2015:2029)),
+             aes(x = year, y = count)) +
+  geom_line() +
+  ylab("Total opioid-related overdose deaths") + xlab("Year") 
+# +
+#   ggtitle("Total opioid-related overdose deaths over time")
+
+plotly::ggplotly(p5)
+
+
+```

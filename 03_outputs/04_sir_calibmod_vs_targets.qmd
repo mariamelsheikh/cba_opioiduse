@@ -1,0 +1,275 @@
+---
+title: "Comparison between SIR calibrated model outcomes and calibration targets"
+format:
+  html:
+    toc: true
+    number-sections: true
+    highlight-style: github
+    embed-resources: true
+editor: visual
+date: last-modified
+date-format: "DD/MM/YYYY THH:mm"
+fig-width: 20
+fig-height: 12
+warning: false
+message: false
+code-fold: true
+---
+
+```{r}
+library(here)
+library(plotly)
+source(here("02_scripts/01_fun_data.R"))
+source(here("02_scripts/03a_fun_calib_td.R"))
+source(here("03_outputs/03_map_calibmod_vs_targets_td.R"))
+
+calib_samples <- readRDS(here("01_data/calib_samples_sir.RDS"))
+uncalib_samples <- readRDS(here("01_data/uncalib_sample_sir.RDS"))
+
+opt_params_sir_prev <- readRDS(here("01_data/prev_outcome_data_sir.RDS"))
+opt_params_sir_deaths <- readRDS(here("01_data/death_outcome_data_sir.RDS"))
+opt_params_sir_oddeaths <- readRDS(here("01_data/oddeath_outcome_data_sir.RDS"))
+opt_params_sir_oat <- readRDS(here("01_data/oat_outcome_data_sir.RDS"))
+
+params_sir_prev_uncalib <- readRDS(here("01_data/prev_outcome_data_sir_uncalib.RDS"))
+params_sir_deaths_uncalib <- readRDS(here("01_data/death_outcome_data_sir_uncalib.RDS"))
+params_sir_oddeaths_uncalib <- readRDS(here("01_data/oddeath_outcome_data_sir_uncalib.RDS"))
+params_sir_oat_uncalib <- readRDS(here("01_data/oat_sir_uncalib.RDS"))
+```
+
+# Distribution of Outcomes
+
+SIR calibration (calib_mod): first i sampled from prior 10000 sample sets, then i used them to calculated outcomes and likelihoods for each sample set, then i resampled from those 10000 with replacement with likelihood weights 10000 samples (unique sets = 6217), and ran the model on all of them and generated distributions for prevalence of rx opioid use, deaths, od deaths, total oat ---- likelihood included deaths (gamma distribution), prevalence of rx opioid use (normal distribution instead of binomial), and total OAT
+
+```{r}
+dt_prev <- as.data.frame(params_sir_prev_uncalib) %>% 
+  # rename(yr15 = "2015",
+  #        yr16 = "2016",
+  #        yr17 = "2017",
+  #        yr18 = "2018") %>% 
+  pivot_longer(1:4, names_to = "prev_year", values_to = "value") %>% 
+  mutate(group = "Uncalibrated Sample") %>% 
+  bind_rows(., as.data.frame(opt_params_sir_prev) %>%
+              # rename(yr15 = "2015",
+              #        yr16 = "2016",
+              #        yr17 = "2017",
+              #        yr18 = "2018") %>% 
+              pivot_longer(1:4, names_to = "prev_year", values_to = "value") %>% 
+              mutate(group = "SIR Calibrated Sample"))
+
+prev_year = c("yr15", "yr16", "yr17", "yr18")
+
+wprop_opioids_rx_tbl <- prop_opioids_rx_target_tbl %>% 
+  rename(value = target_val) %>% 
+  mutate(grp = "Target",
+         prev_year = ifelse(grepl("15", year_mon),2015,
+                            ifelse(grepl("16", year_mon), 2016,
+                                   ifelse(grepl("17", year_mon), 2017,
+                                          ifelse(grepl("18", year_mon), 2018, year_mon)))),
+         prev_year = factor(prev_year)) %>%
+  select(-year_mon) %>% 
+  bind_rows(., prop_opioids_rx_uncalib_tbl %>% 
+               group_by(year) %>% 
+               summarise(value = weighted.mean(target_val, tot_pop_val)) %>% 
+               ungroup() %>% 
+               mutate(prev_year = factor(year),
+                      grp = "Uncalibrated Model - Point estimate")) %>% 
+  bind_rows(., prop_opioids_rx_calib_tbl %>% 
+               group_by(year) %>% 
+               summarise(value = weighted.mean(target_val, tot_pop_val)) %>% 
+               ungroup() %>% 
+               mutate(prev_year = factor(year),
+                      grp = "MAP Calibrated Model")) %>% 
+  bind_rows(., dt_prev %>% 
+              group_by(prev_year) %>% 
+              summarize(value = mean(value)) %>% 
+              mutate(grp = "SIR Calibrated Model - Mean",
+                     prev_year = factor(prev_year))) %>% 
+  bind_rows(., dt_prev %>% 
+              group_by(prev_year) %>% 
+              summarize(value = median(value)) %>% 
+              mutate(grp = "SIR Calibrated Model - Median",
+                     prev_year = factor(prev_year)))
+
+
+ggplotly(ggplot(data = dt_prev,
+       aes(y = value, x = prev_year)) +
+  geom_violin(aes(fill = group), position = "dodge", alpha = 0.5) +
+  geom_point(data = wprop_opioids_rx_tbl,
+             aes(y = value, x = prev_year, color = grp))+
+  xlab("Year") +
+  scale_color_brewer(palette = "Set1", name = "") +
+  scale_fill_brewer(palette = "Set1", name = "") +
+  facet_wrap(~group))
+
+
+ggplotly(ggplot(data = dt_prev,
+                        aes(x = value)) +
+                   geom_histogram(aes(fill = group), color="#e9ecef",
+                                  alpha=0.3, position = 'identity')  +
+                   geom_vline(data = wprop_opioids_rx_tbl, aes(xintercept = value, color = grp))+
+                   theme(axis.text.x = element_text(angle = 45)) +
+                   xlab("Prevalence of rx opioids use") + ylab("") +
+                   scale_color_brewer(palette = "Set1", name = "") +
+                   scale_fill_brewer(palette = "Set1", name = "") +
+                   facet_wrap(~prev_year, scales = "free"))
+```
+
+## Total Deaths
+
+```{r}
+dt_deaths <- as.data.frame(params_sir_deaths_uncalib) %>% 
+  pivot_longer(1:5, names_to = "death_year", values_to = "value") %>% 
+  mutate(group = "Uncalibrated Sample") %>% 
+  bind_rows(., as.data.frame(opt_params_sir_deaths) %>% 
+              pivot_longer(1:5, names_to = "death_year", values_to = "value") %>% 
+              mutate(group = "SIR Calibrated Sample"))
+
+ovrall_deaths_target_uncalib_tbl <- deaths_target_uncalib_tbl %>% 
+  filter(target == "Total deaths") %>% 
+  rename(value = target_val) %>% 
+  mutate(grp = ifelse(group == "Calibrated Model", "MAP Calibrated Model",
+                      ifelse(group == "Uncalibrated Model", "Uncalibrated Model - Point estimate",
+                             ifelse(group == "Target", "Target", group))),
+         death_year = factor(year)) %>% 
+  select(-c(group, year)) %>% 
+  bind_rows(., dt_deaths %>% 
+              group_by(death_year) %>% 
+              summarize(value = mean(value)) %>% 
+              mutate(grp = "SIR Calibrated Model - Mean",
+                     death_year = factor(death_year))) %>% 
+  bind_rows(., dt_deaths %>% 
+              group_by(death_year) %>% 
+              summarize(value = median(value)) %>% 
+              mutate(grp = "SIR Calibrated Model - Median",
+                     death_year = factor(death_year)))
+
+
+ggplotly(ggplot(data = dt_deaths, 
+                aes(y = value, x = factor(death_year))) + 
+           geom_violin(aes(fill = group), position = "dodge", alpha = 0.5) +
+           geom_point(data = ovrall_deaths_target_uncalib_tbl,
+                      aes(y = value, x = factor(death_year), color = grp))+
+           xlab("Year") +
+           scale_color_brewer(palette = "Set1", name = "") +
+           scale_fill_brewer(palette = "Set1", name = "") +
+           facet_wrap(~group))
+
+ggplotly(ggplot(data = dt_deaths,
+                        aes(x = value/1000)) +
+                   geom_histogram(aes(fill = group), color="#e9ecef",
+                                  alpha=0.4, position = 'identity')  +
+                   # scale_fill_manual(values=c("#69b3a2", "#404080")) +
+                   geom_vline(data = ovrall_deaths_target_uncalib_tbl,
+                              aes(xintercept = value/1000, color = grp))+
+                   theme(axis.text.x = element_text(angle = 45)) +
+                   xlab("Total deaths (in thousands)")+ ylab("") +
+           scale_color_brewer(palette = "Set1", name = "") +
+                   scale_fill_brewer(palette = "Set1", name = "") +
+                   xlim(NA, 320)+
+                   facet_wrap(~death_year, scales = "free"))
+```
+
+```{r}
+dt_oddeaths <- as.data.frame(params_sir_oddeaths_uncalib) %>% 
+  pivot_longer(1:6, names_to = "oddeath_year", values_to = "value") %>% 
+  mutate(group = "Uncalibrated Sample") %>% 
+  bind_rows(., as.data.frame(opt_params_sir_oddeaths) %>% 
+              pivot_longer(1:6, names_to = "oddeath_year", values_to = "value") %>% 
+              mutate(group = "SIR Calibrated Sample"))
+
+
+od_deaths_target_uncalib_tbl <- deaths_target_uncalib_tbl %>% 
+  filter(target == "Total OD-deaths") %>% 
+  rename(value = target_val) %>% 
+  mutate(grp = ifelse(group == "Calibrated Model", "MAP Calibrated Model",
+                      ifelse(group == "Uncalibrated Model", "Uncalibrated Model - Point estimate",
+                             ifelse(group == "Target", "Target", group))),
+         oddeath_year = factor(year)) %>% 
+  select(-c(group, year)) %>% 
+  bind_rows(., dt_oddeaths %>% 
+              group_by(oddeath_year) %>% 
+              summarize(value = mean(value)) %>% 
+              mutate(grp = "SIR Calibrated Model - Mean",
+                     oddeath_year = factor(oddeath_year))) %>% 
+  bind_rows(., dt_oddeaths %>% 
+              group_by(oddeath_year) %>% 
+              summarize(value = median(value)) %>% 
+              mutate(grp = "SIR Calibrated Model - Median",
+                     oddeath_year = factor(oddeath_year)))
+
+
+ggplotly(ggplot(data = dt_oddeaths, 
+                aes(y = value, x = factor(oddeath_year))) + 
+           geom_violin(aes(fill = group), position = "dodge", alpha = 0.5) +
+           geom_point(data = od_deaths_target_uncalib_tbl,
+                      aes(y = value, x = factor(oddeath_year), color = grp))+
+           xlab("Year") +
+           scale_color_brewer(palette = "Set1", name = "") +
+           scale_fill_brewer(palette = "Set1", name = "") +
+           facet_wrap(~group))
+
+ggplotly(ggplot(data = dt_oddeaths,
+                        aes(x = value)) +
+                   geom_histogram(aes(fill = group), color="#e9ecef",
+                                  alpha=0.4, position = 'identity')  +
+                   geom_vline(data = od_deaths_target_uncalib_tbl,
+                              aes(xintercept = value, color = grp))+
+                   theme(axis.text.x = element_text(angle = 45)) +
+                   xlab("Total opioid-related overdose deaths")+ ylab("") +
+           scale_color_brewer(palette = "Set1", name = "") +
+                   scale_fill_brewer(palette = "Set1", name = "") +
+                   facet_wrap(~oddeath_year, scales = "free"))
+```
+
+```{r}
+dt_oat <- as.data.frame(params_sir_oat_uncalib) %>% 
+  pivot_longer(1:length(2018:2021), names_to = "oat_year", values_to = "value") %>% 
+  mutate(group = "Uncalibrated Sample") %>% 
+  bind_rows(., as.data.frame(opt_params_sir_oat) %>% 
+              pivot_longer(1:length(2018:2021), names_to = "oat_year", values_to = "value") %>% 
+              mutate(group = "SIR Calibrated Sample"))
+
+oat_target_uncalib_tbl <- oat_target_uncalib_tbl %>% 
+  rename(value = target_val) %>% 
+  mutate(grp = ifelse(group == "Calibrated Model", "MAP Calibrated Model",
+                      ifelse(group == "Uncalibrated Model", "Uncalibrated Model - Point estimate",
+                             ifelse(group == "Target", "Target", group))),
+         oat_year = factor(year)) %>% 
+  select(-c(group, year)) %>% 
+  bind_rows(., dt_oat %>% 
+              group_by(oat_year) %>% 
+              summarize(value = mean(value)) %>% 
+              mutate(grp = "SIR Calibrated Model - Mean",
+                     oat_year = factor(oat_year))) %>% 
+  bind_rows(., dt_oat %>% 
+              group_by(oat_year) %>% 
+              summarize(value = median(value)) %>% 
+              mutate(grp = "SIR Calibrated Model - Median",
+                     oat_year = factor(oat_year)))
+
+
+
+ggplotly(ggplot(data = dt_oat, 
+                aes(y = value, x = factor(oat_year))) + 
+           geom_violin(aes(fill = group), position = "dodge", alpha = 0.5) +
+           geom_point(data = oat_target_uncalib_tbl,
+                      aes(y = value, x = factor(oat_year), color = grp))+
+           xlab("Year") +
+           scale_color_brewer(palette = "Set1", name = "") +
+           scale_fill_brewer(palette = "Set1", name = "") +
+           facet_wrap(~group))
+
+ggplotly(ggplot(data = dt_oat,
+                        aes(x = value)) +
+                   geom_histogram(aes(fill = group), color="#e9ecef",
+                                  alpha=0.4, position = 'identity')  +
+                   geom_vline(data = oat_target_uncalib_tbl,
+                              aes(xintercept = value, color = grp))+
+                   theme(axis.text.x = element_text(angle = 45)) +
+                   xlab("Total OAT")+ ylab("") +
+           scale_color_brewer(palette = "Set1", name = "") +
+                   scale_fill_brewer(palette = "Set1", name = "") +
+                   facet_wrap(~oat_year, scales = "free"))
+
+```
