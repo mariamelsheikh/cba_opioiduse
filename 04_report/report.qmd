@@ -25,6 +25,7 @@ library(plotly)
 source(here("02_scripts/03a_fun_calib_td.R"))
 source(here("02_scripts/03b_fun_calib_ntd.R"))
 source(here("02_scripts/06_interventions_models.R"))
+theme_set(theme_minimal())
 
 ```
 
@@ -32,13 +33,25 @@ source(here("02_scripts/06_interventions_models.R"))
 
 ---What is the decision problem your model aims to inform? What is already known, and what are the key questions you hope to address? Why is this important?-----
 
-Opioid overdose deaths and related harms epidemic began in Canada in 2016 and is still ongoing. As a result, through the Substance Use and Addictions Program (SUAP) and other related programs, the government is funding projects that support people who use drugs and aim to mitigate the harms and deaths resulting from opioid overdose epidemic. For this project, I aim to evaluate the future economic impacts of two of these projects and their effect on reducing opioid-related deaths and harms.
+Opioids are drugs used for pain relief and management but they can also be used to induce euphoria (ie feeling high)
+The epidemic of opioid-related overdose deaths and related harms began in Canada in 2016 and is still ongoing. This epidemic resulted in over 300,000 opioid-related overdose deaths (which I will be referring to as od deaths) This crisis is very complex with many factors affecting it but 2 of the main contributors to it are 1) illegal opioids: since the illicit drug market have become contaminated with strong opioids such as fentanyl and 2) prescription opioids are also contributing to the crisis since they can be misused 
+As a result, the government is is funding projects that support people who use drugs and aim to mitigate the harms and deaths resulting from this epidemic.
+
+Opioid overdose deaths and related harms epidemic began in Canada in 2016 and is still ongoing.  
+
+As a result, through the Substance Use and Addictions Program (SUAP) and other related programs, the government is funding projects that support people who use drugs and aim to mitigate the harms and deaths resulting from opioid overdose epidemic.  
+
+Three of these interventions are:    
+
+1) **Increased access to overdose education and naloxone dispensation (Naloxone)**: This intervention aims to distribute 58000 naloxone kits across Canada and provide training and awareness on opioid-related overdose response. 
+2) **Opioid prescription guidelines**: In 2017 stricter prescription guidelines were introduced for noncancer chronic pain patients.  
+3) **Safer supply**: which refers to services that aim to provide prescribed medications as a safer alternative to toxic illegal drug supply to people who are at high risk of overdose. 
 
 This project aims to evaluate the future economic impact of these interventions by conducting a cost-benefit analysis to examine the difference in healthcare costs between the interventions and their projected effect on reducing opioid-related deaths and other important health outcomes
 
 # Methods
 
-This project is a team project, I worked on the modeling part but many of the decisions and the work upon which the modeling was built was done by other teams members (DP, MS, IW). The model was designed and conceptualized by DP. A systematic review was conducted by DP, MS and IW to extract the effects of the interventions from the literature. Transition probabilities, and healthcare costs were extracted by DP from either the literature or were estimated based on scientific assumptions in consultation with experts working in the field and/or people with lived experiences. Many of the decisions made for the modelling part were made in consultation with DP.
+This project is a team project, I worked on the modeling part but many of the decisions and the work upon which the modeling was built was done by other teams members (DP, MS, IW). The model was designed and conceptualized by DP. A systematic review was conducted by DP, MS and IW to extract the effects of the interventions from the literature. Transition probabilities, and healthcare costs were either extracted by DP from the literature or were estimated based on scientific assumptions in consultation with experts working in the field and/or people with lived experiences. I worked on the modeling part of the project with DP, and many of the decisions made for the modelling part were made in consultation with DP.
 
 ![Fig.1: A simple chematic of the Markov model representing pathways of opioid use in Canada](markov_model.png)
 
@@ -432,9 +445,6 @@ Regarding overall deaths though, except for safer supply, all other scenarios ei
 v_yrs_prev <- c(2015:2029)
 yrs_prev <- length(v_yrs_prev)
 
-
-
-
 prev_fun <- function(mod, i, v_states){
   
   prop_uncalib <- data.frame(matrix(NA,byrow = T, nrow = 12, 
@@ -531,7 +541,8 @@ ggplotly(ggplot() +
   xlab("Year") + ylab("Weighted Yearly Prevalence") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    theme_minimal())
 
 # Prevalence of moderate Brain injury
 
@@ -561,7 +572,7 @@ ggplotly(ggplot() +
   xlab("Year") + ylab("Weighted Yearly Prevalence") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + theme_minimal())
 
 # Prevalence of substance use treatment
 
@@ -594,7 +605,7 @@ ggplotly(ggplot() +
   xlab("Year") + ylab("Weighted Yearly Prevalence") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + theme_minimal())
 
 # Prevalence of prescription opioid use
 
@@ -637,7 +648,7 @@ ggplotly(ggplot() +
   xlab("Year") + ylab("Weighted Yearly Prevalence") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + theme_minimal())
 
 # Prevalence of illicit use
 
@@ -668,7 +679,7 @@ ggplotly(ggplot() +
   xlab("Year") + ylab("Weighted Yearly Prevalence") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + theme_minimal())
 
 # Prevalence of misuse
 
@@ -698,7 +709,7 @@ ggplotly(ggplot() +
   xlab("Year") + ylab("Weighted Yearly Prevalence") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + theme_minimal())
 
 # Prevalence of overdose
 v_states_od <- c("BO_OD_RX", "BO_OD_ILLICIT", "BR_OD_ILLICIT")
@@ -728,18 +739,19 @@ ggplotly(ggplot() +
   xlab("Year") + ylab("Weighted Yearly Prevalence") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
-
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + theme_minimal())
 ```
 
 The results show that none of the interventions affected prevalence of brain injury except for Safer Supply. Safer supply also resulted in an increase of prevalence in substance use treatment (which is expected since it is part of substance use treatment). Prescription Guidelines and All interventions resulted in a reduction in prevalence of prescription opioid use and prescription opioid misuse. No notable differences were observed for prevalence of opioid illicit drug use and opioid-related overdose. 
 
 # Discussion and next steps
 
-If you were to develop this initial analysis into one fit for submission for peer reviewed publication, what steps would you take? Which aspects of the analysis would need to be improved? What are the key takeaways from your initial analysis (and/or, what might the takeaways be if a more complete analysis was conducted)? What is the relationship between your findings and the wider literature or policy landscape? What are the strengths and limitations of your analysis?
+ What is the relationship between your findings and the wider literature or policy landscape?
 
-This analysis shows the promising effects of these interventions in reducing the direct harms of opioid crisis by reducing opioid-related OD deaths. From a healthcare prespective, when all interventions are implemented simultaneously they would reduce costs while saving lives. However, the results regarding overall deaths are not as promising, we are interested in examining the pathways that led to that increase in overall deaths.  
-One of the strengths of this analysis is that the model distinguished between chronic noncancer and cancer pain and included palliative care. It also included brain injuries as one of the often neglected sequalea of overdose. The uncalibrated model estimated values that were similar to target values (a strength of the model), however, it seemed that the calibration did not make a significant difference (a limitation). The calibration might not have worked due to non-identifiability problem since we have many parameters that we were trying to calibrate and few calibration targets. However that is due to the lack of data availability. This has been the main limitation of this project, there is a lack of available for the different parameters, many of which were based on scientific assumptions and knowledge of experts in the field. Therefore, as a next step, we are interested in 1) repeating the analysis for only Ontario since they have more data available so we can better calibrate the model parameters, 2) conduct a value of information analysis to identify the parameters that we need to collect data on and 3) use British Colombia data to try to further understand the pathways that led to increase in overall deaths and repeat the analysis for this province similar to Onatrio.
+This analysis shows the promising effects of these interventions in reducing the direct harms of opioid crisis by reducing opioid-related OD deaths. From a healthcare perspective, when all interventions are implemented simultaneously they would reduce costs while saving lives. However, the results show that there might be negative spillover effects regarding overall deaths are not as promising. We hypothesize that these negative spillover effects are affecting marginalized sub-populations such as those suffering from chronic non-cancer pain, cancer pain and those in palliative care, we are interested in examining the pathways that led to that increase in overall deaths.  
+
+One of the strengths of this analysis is that the model distinguished between chronic noncancer and cancer pain and included palliative care which allows us to examine mechanisms and pathways that haven't been previously examined, once the data is available. It also included brain injuries as one of the often neglected sequalea of overdose. The uncalibrated model estimated values that were similar to target values (a strength of the model), however, it seemed that the calibration did not make a significant difference (a limitation). The calibration might not have worked due to non-identifiability problem since we have many parameters that we were trying to calibrate and few calibration targets. However that is due to the lack of data availability. This has been the main limitation of this project, there is a lack of data for the different parameters, many of which were based on scientific assumptions and knowledge of experts in the field. This model doesn't take into account heterogeneity in gender, age, or models the dynamic aspect of demand and supply of both naloxone and drugs in the illicit market.    
+As a next step, we are interested in 1) repeating the analysis for only Ontario since they have more data available so we can better calibrate the model parameters by including more calibration targets, 2) conduct a value of information analysis to identify the parameters that we need to collect data on, 3) use British Columbia data to try to further understand the pathways that led to increase in overall deaths and repeat the analysis for this province similar to Onatrio and 4) conduct the same analysis with societal costs in addition to healthcare costs.
 
 
 

@@ -186,7 +186,7 @@ ggplotly(ggplot(data = diff_per_psa_dt %>%
     theme_minimal())
 ```
 
-## Table
+## Tables of effects of interventions
 
 ```{r}
 mean_cost_diff_nalox <- mean(m_outcomes_psa[, "cost_diff_nalox"])
@@ -408,6 +408,8 @@ effects_tbl_per |>
   set_table_properties(layout = "autofit") |>
   align_text_col(align = "center", header = TRUE, footer = TRUE)
 ```
+
+## Plots of effects of interventions
 
 ```{r}
 tbl_effect_plot1 <- cbind.data.frame(value = c("lb", "ub", "median"),
