@@ -22,13 +22,17 @@ theme_set(theme_minimal())
 library(here)
 
 m_outcomes_psa <- readRDS(here("01_data/m_outcomes_psa.RDS"))
-point_est <- readRDS(here("point_estiamte.RDS"))
-total_death_oddeaths <- readRDS(here("total_deaths_oddeaths.RDS"))
+point_est <- readRDS(here("01_data/point_estiamte.RDS"))
+total_death_oddeaths <- readRDS(here("01_data/total_deaths_oddeaths.RDS"))
 
 
 mod_names <- c("No Interventions", "Naloxone", "Safer Supply", "Prescription Guidelines", "All Interventions")
 mod_names <- factor(mod_names, levels = mod_names, labels = mod_names)
 ```
+
+## Distribution of change in primary outcomes compared to No intervention
+
+### Opioid-related OD deaths
 
 ```{r}
 outcomes_psa_dt <- as.data.frame(m_outcomes_psa)
@@ -64,13 +68,17 @@ ggplotly(ggplot(data = diff_psa_dt %>%
   geom_density(alpha = 0.9)+
     scale_color_brewer(palette = "Dark2") +
     scale_fill_brewer(palette = "Dark2") +
-    xlab("Change in OD-related Deaths Compared to No Intervention") + ylab("") +
+    xlab("Change in opioid-related OD Deaths Compared to No Intervention") + ylab("") +
     geom_vline(data = point_est_diff %>%
                  filter(grp == "oddeath"), aes(xintercept = diff, linetype = type))+
     labs(linetype = "") +
   facet_wrap(~Intervention, scales = "free_y") +
     theme_minimal())
+```
 
+### Overall deaths
+
+```{r}
 ggplotly(ggplot(data = diff_psa_dt %>% 
          filter(grp == "death"), aes(x = diff, fill = Intervention, color = Intervention)) + 
   geom_density(alpha = 0.9)+
@@ -82,7 +90,11 @@ ggplotly(ggplot(data = diff_psa_dt %>%
     labs(linetype = "") +
   facet_wrap(~Intervention, scales = "free_y") +
     theme_minimal())
+```
 
+### Costs
+
+```{r}
 ggplotly(ggplot(data = diff_psa_dt %>% 
          filter(grp == "cost"), aes(x = diff, fill = Intervention, color = Intervention)) + 
   geom_density(alpha = 0.9)+
@@ -95,6 +107,8 @@ ggplotly(ggplot(data = diff_psa_dt %>%
   facet_wrap(~Intervention, scales = "free_y") +
     theme_minimal())
 ```
+
+## Distribution of percent change in primary outcomes compared to No intervention
 
 ```{r}
 diff_per_psa_dt <- outcomes_psa_dt %>% 
@@ -122,20 +136,27 @@ point_est_diff_per <- point_est %>%
   mutate(grp = ifelse(grp == "od", "oddeath", 
                       ifelse(grp == "deaths", "death", grp)),
          type = "Point Estimate")
+```
 
+### Opioid-related OD deaths
 
+```{r}
 ggplotly(ggplot(data = diff_per_psa_dt %>% 
          filter(grp == "oddeath"), aes(x = diff_per, fill = Intervention, color = Intervention)) + 
   geom_density(alpha = 0.9)+
     scale_color_brewer(palette = "Dark2") +
     scale_fill_brewer(palette = "Dark2") +
-    xlab("% Change in Opioid-related Overdose Deaths Compared to No Intervention") + ylab("") +
+    xlab("% Change in Opioid-related OD Deaths Compared to No Intervention") + ylab("") +
    geom_vline(data = point_est_diff_per %>%
                  filter(grp == "oddeath"), aes(xintercept = diff, linetype = type))+
     labs(linetype = "") +
   facet_wrap(~Intervention, scales = "free_y") +
     theme_minimal())
+```
 
+### Overall deaths
+
+```{r}
 ggplotly(ggplot(data = diff_per_psa_dt %>% 
          filter(grp == "death"), aes(x = diff_per, fill = Intervention, color = Intervention)) + 
   geom_density(alpha = 0.9)+
@@ -147,7 +168,11 @@ ggplotly(ggplot(data = diff_per_psa_dt %>%
     labs(linetype = "") +
   facet_wrap(~Intervention, scales = "free_y") +
     theme_minimal())
+```
 
+### Costs
+
+```{r}
 ggplotly(ggplot(data = diff_per_psa_dt %>% 
          filter(grp == "cost"), aes(x = diff_per, fill = Intervention, color = Intervention)) + 
   geom_density(alpha = 0.9)+
@@ -161,9 +186,7 @@ ggplotly(ggplot(data = diff_per_psa_dt %>%
     theme_minimal())
 ```
 
-# Table
-
-## effect_tbl
+## Table
 
 ```{r}
 mean_cost_diff_nalox <- mean(m_outcomes_psa[, "cost_diff_nalox"])
@@ -275,7 +298,6 @@ effects_tbl |>
   align_text_col(align = "center", header = TRUE, footer = TRUE)
 ```
 
-## effect_tbl_per
 
 ```{r}
 mean_cost_diff_per_nalox <- mean(m_outcomes_psa[, "cost_diff_per_nalox"])
@@ -457,7 +479,7 @@ ggplotly(ggplot(data = tbl_effect_plot2, aes(x = cost_median, y = oddeath_median
   theme_minimal())
 ```
 
-# Posterior distributions for total Deaths and total OD-deaths
+## Posterior distributions for total Deaths and total OD-deaths
 
 ```{r}
 
@@ -507,7 +529,7 @@ ggplot(data = death_psa_dt %>%
 
 ```
 
-# New OD Deaths per year
+## New OD Deaths per year
 
 ```{r}
 outcomes_psa_dt_inci <- outcomes_psa_dt %>% 
@@ -528,7 +550,7 @@ for (i in 1:length(outcomes_psa_dt_inci)){
 }
 
 
-inc_od_death_tbl_mod <- readRDS("inc_od_death_tbl_mod.RDS") %>% 
+inc_od_death_tbl_mod <- readRDS(here("01_data/inc_od_death_tbl_mod.RDS")) %>% 
   filter(scenario == "Scenario 1") %>% 
   select(-scenario) %>% 
   rename(Intervention = intervention,
@@ -553,7 +575,7 @@ inci_od_dt_plot <- inci_od_dt %>%
 inci_od_dt_plot$Intervention <- factor(inci_od_dt_plot$Intervention, levels = mod_names, labels = mod_names)
 
 
-inc_od_death_tbl_target <- readRDS("inc_od_death_tbl_target.RDS") %>% 
+inc_od_death_tbl_target <- readRDS(here("01_data/inc_od_death_tbl_target.RDS")) %>% 
   mutate(grp = "Target")
 
 

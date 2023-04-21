@@ -37,9 +37,9 @@ params_sir_oddeaths_uncalib <- readRDS(here("01_data/oddeath_outcome_data_sir_un
 params_sir_oat_uncalib <- readRDS(here("01_data/oat_sir_uncalib.RDS"))
 ```
 
-# Distribution of Outcomes
-
 SIR calibration (calib_mod): first i sampled from prior 10000 sample sets, then i used them to calculated outcomes and likelihoods for each sample set, then i resampled from those 10000 with replacement with likelihood weights 10000 samples (unique sets = 6217), and ran the model on all of them and generated distributions for prevalence of rx opioid use, deaths, od deaths, total oat ---- likelihood included deaths (gamma distribution), prevalence of rx opioid use (normal distribution instead of binomial), and total OAT
+
+## Prevalence of Rx opioid use
 
 ```{r}
 dt_prev <- as.data.frame(params_sir_prev_uncalib) %>% 
@@ -113,6 +113,17 @@ ggplotly(ggplot(data = dt_prev,
                    scale_color_brewer(palette = "Set1", name = "") +
                    scale_fill_brewer(palette = "Set1", name = "") +
                    facet_wrap(~prev_year, scales = "free"))
+
+p_prev_sir <- ggplot(data = dt_prev,
+       aes(y = value, x = prev_year)) +
+  geom_violin(aes(fill = group), position = "dodge", alpha = 0.5) +
+  geom_point(data = wprop_opioids_rx_tbl,
+             aes(y = value, x = prev_year, color = grp))+
+  xlab("Year") +
+  scale_color_brewer(palette = "Set1", name = "") +
+  scale_fill_brewer(palette = "Set1", name = "") +
+  facet_wrap(~group)
+ggsave(here("04_report/p_prev_sir.png"))
 ```
 
 ## Total Deaths
@@ -168,7 +179,20 @@ ggplotly(ggplot(data = dt_deaths,
                    scale_fill_brewer(palette = "Set1", name = "") +
                    xlim(NA, 320)+
                    facet_wrap(~death_year, scales = "free"))
+
+p_deaths_sir <- ggplot(data = dt_deaths, 
+                aes(y = value, x = factor(death_year))) + 
+           geom_violin(aes(fill = group), position = "dodge", alpha = 0.5) +
+           geom_point(data = ovrall_deaths_target_uncalib_tbl,
+                      aes(y = value, x = factor(death_year), color = grp))+
+           xlab("Year") +
+           scale_color_brewer(palette = "Set1", name = "") +
+           scale_fill_brewer(palette = "Set1", name = "") +
+           facet_wrap(~group)
+ggsave(here("04_report/p_deaths_sir.png"))
 ```
+
+## Opioid-related OD deaths
 
 ```{r}
 dt_oddeaths <- as.data.frame(params_sir_oddeaths_uncalib) %>% 
@@ -220,7 +244,20 @@ ggplotly(ggplot(data = dt_oddeaths,
            scale_color_brewer(palette = "Set1", name = "") +
                    scale_fill_brewer(palette = "Set1", name = "") +
                    facet_wrap(~oddeath_year, scales = "free"))
+
+p_oddeath_sir <- ggplot(data = dt_oddeaths, 
+                aes(y = value, x = factor(oddeath_year))) + 
+           geom_violin(aes(fill = group), position = "dodge", alpha = 0.5) +
+           geom_point(data = od_deaths_target_uncalib_tbl,
+                      aes(y = value, x = factor(oddeath_year), color = grp))+
+           xlab("Year") +
+           scale_color_brewer(palette = "Set1", name = "") +
+           scale_fill_brewer(palette = "Set1", name = "") +
+           facet_wrap(~group)
+ggsave(here("04_report/p_oddeath_sir.png"))
 ```
+
+## Total OAT counts
 
 ```{r}
 dt_oat <- as.data.frame(params_sir_oat_uncalib) %>% 
@@ -271,5 +308,17 @@ ggplotly(ggplot(data = dt_oat,
            scale_color_brewer(palette = "Set1", name = "") +
                    scale_fill_brewer(palette = "Set1", name = "") +
                    facet_wrap(~oat_year, scales = "free"))
+
+p_oat_sir <- ggplot(data = dt_oat, 
+                aes(y = value, x = factor(oat_year))) + 
+           geom_violin(aes(fill = group), position = "dodge", alpha = 0.5) +
+           geom_point(data = oat_target_uncalib_tbl,
+                      aes(y = value, x = factor(oat_year), color = grp))+
+           xlab("Year") +
+           scale_color_brewer(palette = "Set1", name = "") +
+           scale_fill_brewer(palette = "Set1", name = "") +
+           facet_wrap(~group)
+
+ggsave(here("04_report/p_oat_sir.png"))
 
 ```

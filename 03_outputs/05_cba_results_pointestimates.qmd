@@ -318,7 +318,7 @@ inc_od_death_tbl <- data.frame(intervention = c(rep(mod_names, each = 14)),
                               inci_od_deaths_all_2),
            scenario = rep("Scenario 2", 14*5)))
 
-saveRDS(inc_od_death_tbl, file = "inc_od_death_tbl_mod.RDS")
+saveRDS(inc_od_death_tbl, file = here("01_data/inc_od_death_tbl_mod.RDS"))
 
 target_od_deaths <- calib_target_tbl %>% 
   filter(group == "total_od_deaths") %>% 
@@ -326,7 +326,7 @@ target_od_deaths <- calib_target_tbl %>%
   rename(inci_od_deaths = target) %>% 
   mutate(intervention = "Target")
 
-saveRDS(target_od_deaths, file = "inc_od_death_tbl_target.RDS")
+saveRDS(target_od_deaths, file = here("01_data/inc_od_death_tbl_target.RDS"))
 
 inc_od_death_tbl$intervention <- factor(inc_od_death_tbl$intervention,
                                         levels = mod_names, labels = mod_names)
@@ -562,8 +562,8 @@ deaths_diff_per <- c(deaths_eff_tbl$nalx_effect_per[2], deaths_eff_tbl$ss_effect
 
 saveRDS(cbind.data.frame(cost_diff, cost_diff_per,
                          od_deaths_diff, od_deaths_diff_per,
-                         deaths_diff, deaths_diff_per), "point_estiamte.RDS")
-saveRDS(total_death_oddeaths, "total_deaths_oddeaths.RDS")
+                         deaths_diff, deaths_diff_per), here("01_data/point_estiamte.RDS"))
+saveRDS(total_death_oddeaths, here("01_data/total_deaths_oddeaths.RDS"))
 
 costs <- paste0(round(cost_diff/1000000, 0), " (", cost_diff_per, "%)")
 deaths <- paste0(round(deaths_diff, 0), " (", deaths_diff_per, "%)")
@@ -771,7 +771,7 @@ ggplotly(ggplot(data = tbl_effect_plot2, aes(x = cost_diff_per, y = od_deaths_di
 
 ```{r}
 v_yrs_prev <- c(2015:2029)
-yrs_prev <- length(v_yrs_prev_rx)
+yrs_prev <- length(v_yrs_prev)
 
 
 prev_fun <- function(mod, i, v_states){
@@ -844,7 +844,7 @@ prev_fun <- function(mod, i, v_states){
 ```
 
 
-## Severe Brain injury
+### Severe Brain injury
 
 ```{r}
 noint_prev_sevbi_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
@@ -905,13 +905,13 @@ ggplotly(ggplot() +
   geom_point(data = prev_sevbi_yr_tbl,
              aes(x = factor(year), y = value,
                  color = intervention, fill = intervention)) +
-  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of severe brain injury") +
+  xlab("Year") + ylab("Weighted Yearly Prevalence of severe brain injury") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
 ```
 
-## Prevalence of moderate Brain injury
+### Prevalence of moderate Brain injury
 
 ```{r}
 noint_prev_modbi_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
@@ -975,7 +975,7 @@ ggplotly(ggplot() +
   geom_point(data = prev_modbi_yr_tbl,
              aes(x = factor(year), y = value,
                  color = intervention, fill = intervention)) +
-  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of moderate brain injury") +
+  xlab("Year") + ylab("Weighted Yearly Prevalence of moderate brain injury") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
@@ -983,7 +983,7 @@ ggplotly(ggplot() +
 ```
 
 
-## Prevalence of substance use treatment
+### Prevalence of substance use treatment
 
 ```{r}
 v_states_prev_tx <- c("BS_DETOX", "BS_OAT_INI", "BS_OAT_MAINT",
@@ -1052,13 +1052,14 @@ ggplotly(ggplot() +
   geom_point(data = prev_tx_yr_tbl,
              aes(x = factor(year), y = value,
                  color = intervention, fill = intervention)) +
-  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of substance use treatment") +
+  xlab("Year") + ylab("Weighted Yearly Prevalence of substance use treatment") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
 ```
 
-## Prevalence of prescription opioid use
+### Prevalence of prescription opioid use
+
 ```{r}
 prop_opioids_rx_target_tbl <- calib_target_tbl %>% 
               filter(group == "prev_on_opioidsrx") %>% 
@@ -1148,13 +1149,14 @@ ggplotly(ggplot() +
   geom_point(data = prev_rx_opd_yr_tbl,
              aes(x = factor(year), y = value,
                  color = intervention, fill = intervention)) +
-  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of prescription opioid use") +
+  xlab("Year") + ylab("Weighted Yearly Prevalence of prescription opioid use") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
 ```
 
-## Prevalence of illicit use
+### Prevalence of illicit use
+
 ```{r}
 v_states_illicit <- c("BI_ILLICIT", "BR_ILLICIT")
 noint_prev_illicituse_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
@@ -1218,13 +1220,13 @@ ggplotly(ggplot() +
   geom_point(data = prev_illicituse_yr_tbl,
              aes(x = factor(year), y = value,
                  color = intervention, fill = intervention)) +
-  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of illicit opioid use") +
+  xlab("Year") + ylab("Weighted Yearly Prevalence of illicit opioid use") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
 ```
 
-## Prevalence of misuse
+### Prevalence of misuse
 
 ```{r}
 noint_prev_rxmisuse_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
@@ -1288,14 +1290,14 @@ ggplotly(ggplot() +
   geom_point(data = prev_rxmisuse_yr_tbl,
              aes(x = factor(year), y = value,
                  color = intervention, fill = intervention)) +
-  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of rx opioid misuse") +
+  xlab("Year") + ylab("Weighted Yearly Prevalence of rx opioid misuse") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
 
 ```
 
-## Prevalence of overdose
+### Prevalence of overdose
 
 ```{r}
 v_states_od <- c("BO_OD_RX", "BO_OD_ILLICIT", "BR_OD_ILLICIT")
@@ -1360,14 +1362,14 @@ ggplotly(ggplot() +
   geom_point(data = prev_od_yr_tbl,
              aes(x = factor(year), y = value,
                  color = intervention, fill = intervention)) +
-  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of opioid-related overdose") +
+  xlab("Year") + ylab("Weighted Yearly Prevalence of opioid-related overdose") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
 
 ```
 
-### prevalence of illicit overdose
+#### prevalence of illicit overdose
 
 ```{r}
 v_states_illicitod <- c("BO_OD_ILLICIT", "BR_OD_ILLICIT")
@@ -1432,13 +1434,13 @@ ggplotly(ggplot() +
   geom_point(data = prev_illicitod_yr_tbl,
              aes(x = factor(year), y = value,
                  color = intervention, fill = intervention)) +
-  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of illicit opioid-related overdose") +
+  xlab("Year") + ylab("Weighted Yearly Prevalence of illicit opioid-related overdose") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
 ```
 
-### prevalence of rx overdose
+#### prevalence of rx overdose
 
 ```{r}
 noint_prev_rxod_mon_tbl <-  prev_fun(mod = mod_basecase, i = 1,
@@ -1502,7 +1504,7 @@ ggplotly(ggplot() +
   geom_point(data = prev_rxod_yr_tbl,
              aes(x = factor(year), y = value,
                  color = intervention, fill = intervention)) +
-  xlab("Year_Month") + ylab("Weighted Yearly Prevalence of rx opioid-related overdose") +
+  xlab("Year") + ylab("Weighted Yearly Prevalence of rx opioid-related overdose") +
   scale_fill_discrete(name = "Intervention")+
   scale_color_discrete(name = "Intervention")+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
