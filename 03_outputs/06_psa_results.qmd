@@ -298,7 +298,6 @@ effects_tbl |>
   align_text_col(align = "center", header = TRUE, footer = TRUE)
 ```
 
-
 ```{r}
 mean_cost_diff_per_nalox <- mean(m_outcomes_psa[, "cost_diff_per_nalox"])
 ci_cost_diff_per_nalox <- quantile(m_outcomes_psa[, "cost_diff_per_nalox"],

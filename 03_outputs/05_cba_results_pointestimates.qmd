@@ -1,5 +1,5 @@
 ---
-title: "05_cba_results"
+title: "CBA results point estimates"
 format:
   html:
     toc: true
@@ -843,7 +843,6 @@ prev_fun <- function(mod, i, v_states){
 }
 ```
 
-
 ### Severe Brain injury
 
 ```{r}
@@ -981,7 +980,6 @@ ggplotly(ggplot() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
 
 ```
-
 
 ### Prevalence of substance use treatment
 
@@ -1510,4 +1508,3 @@ ggplotly(ggplot() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
 
 ```
-

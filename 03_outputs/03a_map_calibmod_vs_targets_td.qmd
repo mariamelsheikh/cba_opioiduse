@@ -305,10 +305,6 @@ p4 <- ggplot() +
   xlab("Year") + ylab("Total Opioid-related Overdose Deaths") +
   scale_color_brewer(palette = "Dark2", name = "") +
   scale_fill_brewer(palette = "Dark2", name = "")
-# +
-#   facet_wrap(~target, scales = "free") + theme(legend.position="bottom")
-
-
 
 plotly::ggplotly(p4)
 ```
@@ -361,10 +357,6 @@ p5 <- ggplot() +
   xlab("Year") + ylab("Total OAT counts") +
   scale_color_brewer(palette = "Dark2", name = "") +
   scale_fill_brewer(palette = "Dark2", name = "")
-# +
-#   facet_wrap(~target, scales = "free") + theme(legend.position="bottom")
-
-
 
 plotly::ggplotly(p5)
 ```

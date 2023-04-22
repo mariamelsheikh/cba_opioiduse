@@ -37,23 +37,17 @@ params_sir_oddeaths_uncalib <- readRDS(here("01_data/oddeath_outcome_data_sir_un
 params_sir_oat_uncalib <- readRDS(here("01_data/oat_sir_uncalib.RDS"))
 ```
 
-SIR calibration (calib_mod): first i sampled from prior 10000 sample sets, then i used them to calculated outcomes and likelihoods for each sample set, then i resampled from those 10000 with replacement with likelihood weights 10000 samples (unique sets = 6217), and ran the model on all of them and generated distributions for prevalence of rx opioid use, deaths, od deaths, total oat ---- likelihood included deaths (gamma distribution), prevalence of rx opioid use (normal distribution instead of binomial), and total OAT
+SIR calibration sample: first i sampled from prior 10000 sample sets, then i used them to calculated outcomes and likelihoods for each sample set, then i resampled from those 10000 with replacement with likelihood weights 10000 samples (unique sets = 6398), and ran the model on all of them and generated distributions for prevalence of rx opioid use, deaths, od deaths, total oat ---- likelihood included deaths (gamma distribution), prevalence of rx opioid use (normal distribution instead of binomial), and total OAT   
+
+Uncalibrated sample: Here i resampled from the 10 000 sampled from the prior with replacement with equal weights 10000 sampled (unique sets = 6296), then ran the model on all of them and generated distributions for prevalence of rx opioid use, deaths, od deaths and total oat
 
 ## Prevalence of Rx opioid use
 
 ```{r}
 dt_prev <- as.data.frame(params_sir_prev_uncalib) %>% 
-  # rename(yr15 = "2015",
-  #        yr16 = "2016",
-  #        yr17 = "2017",
-  #        yr18 = "2018") %>% 
   pivot_longer(1:4, names_to = "prev_year", values_to = "value") %>% 
   mutate(group = "Uncalibrated Sample") %>% 
   bind_rows(., as.data.frame(opt_params_sir_prev) %>%
-              # rename(yr15 = "2015",
-              #        yr16 = "2016",
-              #        yr17 = "2017",
-              #        yr18 = "2018") %>% 
               pivot_longer(1:4, names_to = "prev_year", values_to = "value") %>% 
               mutate(group = "SIR Calibrated Sample"))
 

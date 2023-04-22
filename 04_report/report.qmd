@@ -1,6 +1,8 @@
 ---
 title: "Cost benefit analysis of the federal interventions that aim to reduce the harms of opioid crisis"
-subtitle: "Final Project | EPIB676"
+subtitle: |
+    | Final Project | EPIB676
+    | Github repo link: <https://github.com/mariamelsheikh/cba_opioiduse>
 author: "Mariam El Sheikh"
 format:
   html:
@@ -16,6 +18,7 @@ fig-height: 12
 warning: false
 message: false
 code-fold: true
+bibliography: opioids_modelling.bib
 ---
 
 ```{r}
@@ -31,31 +34,23 @@ theme_set(theme_minimal())
 
 # Background
 
----What is the decision problem your model aims to inform? What is already known, and what are the key questions you hope to address? Why is this important?-----
+Opioids are drugs used for pain relief and management but they can also be used to induce euphoria (ie feeling high). The epidemic of opioid-related overdose deaths and related harms began in Canada in 2016 and is still ongoing. This epidemic resulted in over 30,000 opioid-related overdose deaths since 2016, and in a huge burden on the healthcare system, just directly from opioid-related poisoning there has been over 34 000 opioid-related (excluding Quebec) and over 28 000 emergency medical services responses to suspected opioid-related overdose 2022 alone. It is important to also recognize that the harms of opioids epidemic are more than just opioid-related overdose deaths. [@federalprovincialandterritorialspecialadvisorycommitteeontheepidemicofopioidoverdoses.OpioidStimulantrelatedHarms2023] This crisis is very complex with many factors affecting it but two of the main contributors to it are 1) illegal opioids: since the illicit drug market have become contaminated with strong opioids such as fentanyl (will be referred to them as illicit opioids) and 2) prescription opioids are also contributing to the crisis since they can be misused.[@healthcanadaCanadaOpioidCrisis2020] As a result, through the Substance Use and Addictions Program (SUAP) and other related programs, the government is funding projects that support people who use drugs and aim to mitigate the harms and deaths resulting from opioid overdose epidemic based on scientific evidence [@healthcanadaFundingCanadianDrugs2017, @healthcanadaFederalActionsOpioids2020].
 
-Opioids are drugs used for pain relief and management but they can also be used to induce euphoria (ie feeling high)
-The epidemic of opioid-related overdose deaths and related harms began in Canada in 2016 and is still ongoing. This epidemic resulted in over 300,000 opioid-related overdose deaths (which I will be referring to as od deaths) This crisis is very complex with many factors affecting it but 2 of the main contributors to it are 1) illegal opioids: since the illicit drug market have become contaminated with strong opioids such as fentanyl and 2) prescription opioids are also contributing to the crisis since they can be misused 
-As a result, the government is is funding projects that support people who use drugs and aim to mitigate the harms and deaths resulting from this epidemic.
+Three of these interventions are:
 
-Opioid overdose deaths and related harms epidemic began in Canada in 2016 and is still ongoing.  
+1)  **Increased access to overdose education and naloxone dispensation (Naloxone)**: Naloxone is a drug that reverses an opioid overdose and is proven to be safe. This intervention aims to distribute 58 000 naloxone kits across Canada and provide training and awareness on opioid-related overdose response (funding for it is \$20 million dollars).[@healthcanadaGovernmentCanadaAnnounces2021]
+2)  **Opioid prescription guidelines**: In 2017 stricter prescription guidelines were introduced for non-cancer chronic pain patients. These guidelines include 4 strong recommendations and 6 weak recommendations that aim to optimize non-opioid therapy and to restrict it to patients who do not have history of substance use.[@busseGuidelineOpioidTherapy2017]\
+3)  **Safer supply**: which refers to services that aim to provide prescribed medications as a safer alternative to toxic illegal drug supply to people who are at high risk of overdose. This differs from agonist treatment (OAT) in terms of aims, population it serves and services. While OAT aims to treat substance use disorder and mitigates the effects of withdrawal by the use of different medications, Safer supply services aims to mitigate the harmful of effects of contaminated opioids from the illicit drug market, it is more flexible and does not aim to eventually stop drug use.  [@healthcanadaSaferSupplyPrescribed2021]
 
-As a result, through the Substance Use and Addictions Program (SUAP) and other related programs, the government is funding projects that support people who use drugs and aim to mitigate the harms and deaths resulting from opioid overdose epidemic.  
-
-Three of these interventions are:    
-
-1) **Increased access to overdose education and naloxone dispensation (Naloxone)**: This intervention aims to distribute 58000 naloxone kits across Canada and provide training and awareness on opioid-related overdose response. 
-2) **Opioid prescription guidelines**: In 2017 stricter prescription guidelines were introduced for noncancer chronic pain patients.  
-3) **Safer supply**: which refers to services that aim to provide prescribed medications as a safer alternative to toxic illegal drug supply to people who are at high risk of overdose. 
-
-This project aims to evaluate the future economic impact of these interventions by conducting a cost-benefit analysis to examine the difference in healthcare costs between the interventions and their projected effect on reducing opioid-related deaths and other important health outcomes
+This project aims to evaluate the future economic impact of these interventions by conducting a cost-benefit analysis to examine the difference in healthcare costs between the interventions and their projected effects on reducing opioid-related deaths and other important health outcomes. This project aims to provide evidence based on the currently available data on the effectiveness of these interventions.
 
 # Methods
 
-This project is a team project, I worked on the modeling part but many of the decisions and the work upon which the modeling was built was done by other teams members (DP, MS, IW). The model was designed and conceptualized by DP. A systematic review was conducted by DP, MS and IW to extract the effects of the interventions from the literature. Transition probabilities, and healthcare costs were either extracted by DP from the literature or were estimated based on scientific assumptions in consultation with experts working in the field and/or people with lived experiences. I worked on the modeling part of the project with DP, and many of the decisions made for the modelling part were made in consultation with DP.
+This project is a team project, I worked on the modeling part but many of the decisions and the work upon which the modeling was built was done by other teams members (DP, MS, IW). The model was designed and conceptualized by DP. A systematic review was conducted by DP, MS and IW to extract the effects of the interventions from the literature. Transition probabilities, and healthcare costs were estimated by DP, either by extracting them from the literature or based on scientific assumptions in consultation with experts working in the field and/or people with lived experiences. I worked on the modeling part of the project with DP, and many of the decisions made for the modelling part were made in consultation with DP. Data sources for the parameters were either published journal papers, publicly available data and reports from different federal and provincial agencies, as well as other health organizations.
 
 ![Fig.1: A simple chematic of the Markov model representing pathways of opioid use in Canada](markov_model.png)
 
-An open cohort Markov model was used (fig. 1) that consists of `r n_states` states representing the pathways of opioid use in Canada over 15 years (2015 to 2029) with monthly cycles for 15+ Canadian population (designed and conceptualized by DP). It is an open cohort model that takes into account the changes in population over time by adding people to the first state (Pain free, no use) every cycle. The yearly increase was assumed to be constant throughout the year (meaning that each increase was divided by 12, as for years in the future, projections of population size in Canada were used and proportion of those 15+ was estimated based on previous data, then a similar approach was used to estimate the monthly increase in the cohort).
+An open cohort Markov model that consists of `r n_states` states representing the pathways of opioid use in Canada: "No risk of opioid-related overdose", "At-risk of opioid-related overdose", "Overdose and Sequelae" and "Post-brain injury opioid use states" was used for this analysis (fig. 1). The model runs over 15 years (2015 to 2029) with monthly cycles for population aged 15+ years (designed and conceptualized by DP).  It is an open cohort model that takes into account the changes in population over time by adding people to the first state (Pain free, no use) every cycle (The yearly increase was assumed to be constant throughout the year, meaning that each increase was divided by 12. As for years beyond 2022, projections of population size in Canada were used [@governmentofcanadaProjectedPopulationProjection2019] and proportion of those 15+ was estimated based on previous data, then a similar approach was used to estimate the monthly increase in the cohort).
 
 Table 1: List of variables corresponding to the states in the model
 
@@ -65,82 +60,144 @@ flextable(ini_states_tbl_org %>%
   autofit()
 ```
 
-
 Characteristics of this model:
 
--   One of the unique aspects of this model is that it distinguishes between chronic noncancer pain, and cancer pain and it includes palliative care, which are important pathways that we believe would be part of the spillover effects of at least one of the interventions we are examining (prescription guidelines).
--   We included brain injuries as part of the OD sequelea. We didn't distinguish between mild brain injury and no brain injury, both transition from OD back into the general population, however we distinguished between moderate and severe brain injury. For severe brain injury as a result of an opioid-related OD we assumed that these individuals won't be part of the model anymore, they can either transition to death or transition to an "out" state where they can stay there until they die (we created the "out" state so that the high brain injury healthcare costs wouldn't be incurred every cycle for those who didn't die). For the moderate brain injury state, we created another set of repeat states for opioid illicit use, substance use treatment that they are different from the general population states since we believed that the transitions would be different for those who experienced moderate brain injury.\
--   It distinguishes between opioid-related OD deaths and deaths from any other causes.
--   It also distinguishes between Rx opioid misuse and opioid illicit use, and overdose as a result of an Rx opioid and opioids from illicit drug market.\
--   It accounts for fentanyl contamination in the illicit drug market by including a multiplier of (1.005)\^(t-36) (t-36 is number of month) to the probabilities of transitioning from opioid illicit use to illicit use OD and transitioning from illicit use OD to OD death, from 2018 to 2020. Then beyond 2020 it remained constant.
+-   One of the unique aspects of this model is that it distinguishes between chronic non-cancer pain, and cancer pain and it includes palliative care, which are important pathways that would capture the spillover effects of at least one of the interventions we are examining (prescription guidelines).
+-   We included brain injuries as part of the overdose sequelea. We did not distinguish between mild brain injury and no brain injury, both transition from overdose back into the pre-overdose/brain injury opioid-use states, however we distinguished between moderate and severe brain injury. For severe brain injury as a result of an opioid-related overdose we assumed that these individuals will not be part of the model anymore, they can either transition to death or transition to an "out" state where they can stay there until they die (we created the "out" state so that the high brain injury healthcare costs would not be incurred every cycle for those who did not die). For the moderate brain injury state, we created another set of repeat states for the opioid use states (repeat illicit opioid use, repeat OAT initiation, repeat OAT maintenance, repeat OAT/Safer supply, repeat Safer supply), since the transition probabilities would be different for those who experienced moderate brain injury.\
+-   It distinguishes between opioid-related overdose deaths and deaths from any other causes (overall deaths).
+-   It distinguishes between prescription opioid misuse (defined as prescription-graded opioids used either by individuals other than those they were prescribed for, or used in a way other than prescribed) and illicit opioid use (opioids from illicit market), and distinguishes between overdose as a result of an prescription opioid and overdose from illicit opioids.\
+-   It accounts for fentanyl contamination in the illicit drug market by including a multiplier of (1.005)^(t-36) (t-36 is number of month) to the probabilities of transitioning from illicit opioid use to illicit use overdose and transitioning from illicit use overdose to overdose death, from 2018 to 2020. Then beyond 2020 it remained constant.
 
 ## Alternatives
 
-This model was run for 5 scenarios in regards to the previously mentioned interventions: 1) No interventions, 2) Naloxone only, 3) Prescription guidelines only, 4) Safer Supply only, and 5) all 3 interventions. The effects of each of the interventions were estimated by other team members who conducted a systematic review of the literature (DP, MS, IW). Transition probabilities were changed for the naloxone and prescription guidelines interventions (as a result the 1-rest transition probability will be changed).
+This model was run for 5 scenarios: 1) No interventions, 2) Naloxone, 3) Prescription guidelines, 4) Safer Supply, and 5) all interventions combined. The effects of each of the interventions were estimated by other team members who conducted a systematic review of the literature (DP, MS, IW). Transition probabilities were changed for the naloxone and prescription guidelines interventions (and as a result the corresponding 1-rest transition probabilities will be changed).
 
 For the **naloxone intervention** the following transition probabilities were changed starting from January 2017:
 
--   from illicit opioid OD to OD death was reduced by 5% (1-rest: illicit opioid OD to illicit opioid use), and
--   from rx opioid overdose to OD deaths was reduced by 3% (1-rest: Rx opioid OD to Rx opioid misuse).
+-   illicit opioid overdose to overdose death was reduced by 5% (1-rest: illicit opioid overdose to illicit opioid use), and
+-   prescription opioid overdose to overdose deaths was reduced by 3% (1-rest: prescription opioid overdose to prescription opioid misuse).
 
 For the **prescription guidelines** the following transition probabilities were changed starting from May 2017:
 
--   pain free to acute pain, rx use was reduced by 43% (1-rest: pain free stay in pain free),\
--   cancer no use to cancer Rx use was reduced by 55% (1-rest: cancer no use stay in cancer no use),
--   acute pain Rx use to chronic pain, Rx use was reduced by 22% (1-rest: acute pain Rx use to pain free), and
--   chronic pain Rx use to chronic pain no use was increased by 4% (1-rest: chronic pain Rx use stay in chronic pain Rx use).
+-   pain free to acute pain, prescription use was reduced by 43% (1-rest: pain free stay in pain free),\
+-   cancer no use to cancer prescription use was reduced by 55% (1-rest: cancer no use stay in cancer no use),
+-   acute pain prescription use to chronic pain, prescription use was reduced by 22% (1-rest: acute pain prescription use to pain free), and
+-   chronic pain prescription use to chronic pain no use was increased by 4% (1-rest: chronic pain prescription use stay in chronic pain prescription use).
 
-For **safer supply** to account for the effect of the pilot programs introduced in 2016, 1000 people were moved from illicit drug use state to OAT/Safer supply state in January 2016. Then to account for compassionate prescribing due to the COVID-19 panademic 10,000 people were moved from illicit drug use state to OAT/Safer supply state in April 2020. Before January 2016 all transitioning into and out of safer supply states (Safer Supply, OAT/Safer Supply, Repeat OAT/Safer Supply and Repeat Safer Supply). Starting from January 2016, all transitioning out of OAT/Safer Supply (and staying in) were changed to their corresponding non-zero values. Until in 2023, when the intervention is supposed to be implemented, all transitioning probabilities into and out of safer supply states were changed to their non-zero values.\
-For the cost-benefit analysis the effects of these interventions individually and all together was on interest, therefore 4 different comparisons were made: 1) Naloxone vs No Interventions, 2) Safer Supply vs No Interventions, 3) Prescription Guidelines vs No Interventions and 4) All Interventions vs No Interventions.
+For **safer supply** to account for the effect of the pilot programs introduced in 2016, 1000 people were moved from illicit drug use state to OAT/Safer supply state in January 2016. Then to account for compassionate prescribing due to the COVID-19 pandemic 10,000 people were moved from illicit drug use state to OAT/Safer supply state in April 2020. [@wytonExpertsRejectBC2022] Before January 2016 all transitioning into and out of safer supply states (Safer Supply, OAT/Safer Supply, Repeat OAT/Safer Supply and Repeat Safer Supply). Starting from January 2016, all transitioning out of OAT/Safer Supply (and staying in) were changed to their corresponding non-zero values. Until in 2023, when the intervention is supposed to be implemented, all transitioning probabilities into and out of safer supply states were changed to their non-zero values.\
+For the cost-benefit analysis the effects of these interventions individually and all together was of interest, therefore 4 different comparisons were made: 1) Naloxone vs No Interventions, 2) Safer Supply vs No Interventions, 3) Prescription Guidelines vs No Interventions and 4) All Interventions vs No Interventions.
 
 ## Outcomes
 
 Primary Outcomes:
 
--   CBA: Opioid-related costs from the healthcare perspectives for all states were used in this analysis. These include costs for hospitalization, ED visits, physician billing, paramedic services, drugs, and other healthcare system related costs. These were identified from publicly available data, as well as published systematic reviews, studies, and reports. All costs were discounted using 0.03 discount factor annually.
--   Epidemiological measures: cumulative overall deaths and OD deaths.
+-   Cost-benefit analysis: Opioid-related costs from the healthcare perspectives for all states were used in this analysis. These include costs for hospitalization, ED visits, physician billing, paramedic services, drugs, and other healthcare system related costs. These were identified from publicly available data, as well as published systematic reviews, studies, and reports. All costs were discounted using 3% discount factor annually.
+-   Epidemiological measures: cumulative overall deaths and opioid-related overdose deaths.
 
 Secondary Outcomes - more epidemiological measures:
 
--   Weighted yearly prevalence of 1) severe brain injuries due to opioid overdose, 2) moderate brain injuries due to opioid overdose, 3) substance use treatment and 4) prescription opioid use. In addition to trends in monthly prevalence counts for 4 outcomes.
+-   Weighted yearly prevalence of 1) severe brain injuries due to opioid overdose, 2) moderate brain injuries due to opioid overdose, 3) substance use treatment and 4) prescription opioid use.
 
-For the primary outcomes changes and percent changes were calculated for the 4 different comparison groups while the secondary outcomes were calculated for each of th 5 scenarios.
-
+For the primary outcomes changes and percent changes were calculated for the 4 different comparison groups while the secondary outcomes weighted yearly prevalence was calculated for each of th 5 scenarios.
 
 ## Calibration and Uncertainty analysis
 
-After designing the model structure, initial populations, and transitions, we calibrated the model using data from 2015 to 2021. Our calibration targets were total deaths (excluding opioid-related overdose deaths), the total number of people in Opioid Agonist Treatment (OAT), and proportions of prescription opioid use. To obtain this data, we used various sources, including Statistics Canada, the Canadian Institute for Health Information's report on Opioid prescribing in Canada, and scientific literature (DP).  
-Even though we had opioid-related OD deaths numbers, we didn't use them as targets because they are directly affected by different interventions that has been implemented so we couldn't calibrate the no intervention parameters to them. However, we used them to assess if the estimates of opioid-related OD deaths from the model of the no intervention scenario are sound (they should be more than the targets). 
+After designing the model structure, initial populations, and transitions, we calibrated the model using data from 2015 to 2021. Our calibration targets were total deaths (excluding opioid-related overdose deaths), the total number of people in OAT, and proportions of prescription opioid use. To obtain this data, we used various sources, including Statistics Canada, the Canadian Institute for Health Information's report on Opioid prescribing in Canada, and scientific literature (DP).\
+Even though we had opioid-related overdose deaths numbers, we did not use them as targets because they are directly affected by different interventions that has been implemented so we could not calibrate the "no intervention" parameters to them. However, we used them to assess if the estimates of opioid-related overdose deaths from the model of the "no intervention" scenario are sound (they should be more than the targets).
 
-We selected parameters to calibrate based on a one-way sensitivity analysis, where we changed one transition probability at a time, using lower and upper ranges, and observed how this impacted predicted outcomes (overall deaths and OD deaths). The one-way sensitivity analysis was conducted twice, 1) accounting for the fentanyl contamination (Scenario 1) and 2) without accounting for fentanyl contamination (Scenario 2). We included transition probabilities that resulted in a notable change in predicted outcomes (defined as 2.5%) in the set of parameters to be calibrated, in addition to all transition probabilities to death or opioid-related overdose deaths (a total of `r n_params` parameters for scenario 1 and `r n_params_ntd` paramters for scenario 2). We then conducted a Maximum A Posteriori (MAP) estimation using Nelder Mead, a sampling method that aims to find the global optimum twice once with the model for both scenarios. This allowed us to select the parameter set that best approximated the targets and provided us with information about changes in the prior information for some of the parameters. Overall, we updated the following baseline transition probabilities:   
+We selected parameters to calibrate based on a one-way sensitivity analysis, where we changed one transition probability at a time, using lower and upper ranges (which were either estimated from the literature and if not available +/-25% range was use), and observed how this impacted predicted outcomes (overall deaths and overdose deaths). The one-way sensitivity analysis was conducted twice, 1) accounting for the fentanyl contamination (Scenario 1) and 2) without accounting for fentanyl contamination (Scenario 2). We included transition probabilities that resulted in a notable change in predicted outcomes (defined as 2.5%) in the set of parameters to be calibrated, in addition to all transition probabilities to overall deaths or opioid-related overdose deaths (a total of `r n_params` parameters for scenario 1 and `r n_params_ntd` paramters for scenario 2). We then conducted a Maximum A Posteriori (MAP) estimation using Nelder Mead, a sampling method that aims to find the global optimum twice once with the model for both scenarios. This allowed us to select the parameter set that best approximated the targets and provided us with information to inform changes in the prior information for some of the parameters. Overall, we updated the following baseline transition probabilities based on MAP parameter set:
 
-- Pain free to Rx opioids misuse changed from 0.00032511 to 0.00220011 
-- Chronic pain, rx use to rx OD from 0.00097898 to 0.00160398 
-- Detox to illicit opioid use from 0.1818112 to 0.22181118 
-- Detox to OAT initiation from 0.80000000 to 0.82000000  
-- Palliative care, rx use to death from 0.37500000 to 0.38250000 
-- OAT maintenance stay in OAT maintenance from 0.70000000 to 0.71000000
+-   Pain free to prescription opioids misuse changed from 0.00032511 to 0.00220011
+-   Chronic pain, prescription use to prescription overdose from 0.00097898 to 0.00160398
+-   Detox to illicit opioid use from 0.1818112 to 0.22181118
+-   Detox to OAT initiation from 0.80000000 to 0.82000000\
+-   Palliative care, prescription use to death from 0.37500000 to 0.38250000
+-   OAT maintenance stay in OAT maintenance from 0.70000000 to 0.71000000
 
-Then we used the Sample Importance Resampling (SIR) Bayesian calibration method after updating the prior information based on the MAP results, and we ran the model using the sample sets (that were randomly sampled from the priors defined for the parameters), estimated likelihood for each set, and weighted the sets by likelihood to approximate posteriors.
+Then we used the Sample Importance Resampling (SIR) Bayesian calibration method after updating the prior information based on the MAP results, and we ran the model using the sample sets (that were randomly sampled from the priors defined for the parameters: either estimated from the literature or using a range of +/-5%), estimated likelihood for each set, and weighted the sets by likelihood to approximate posteriors.
 
-Probabilistic sensitivity analysis (PSA) was conducted on primary outcomes to account for the uncertainty in our result. The SIR generated posteriors for the parameters that were calibrated were used as priors and for other transition probabilities, a uniform distribution was used with ranges either from the literature and if not available, +/-5% were used as ranges. From these priors probabilistic samples were randomly samples and the analysis was simulated 10 000 times.
+Probabilistic sensitivity analysis (PSA) was conducted on primary outcomes to account for the uncertainty in our results. The SIR generated posteriors for the parameters that were calibrated were used as priors and for other transition probabilities, a uniform distribution was used with ranges either from the literature and if not available, +/-5% were used as ranges. From these priors, probabilistic samples were randomly sampled and the analysis was simulated 10 000 times.
 
 # Results
 
-What are your main findings? Should estimate some outcome(s) for \>1 alternative, and potentially conduct incremental analysis (compute ICERS) depending on your framework. Report uncertainty analysis findings to give some idea of the robustness of your findings
+## Uncalibrated No Intervention model
+
+```{r}
+set.seed(122345)
+colors_pal <- Polychrome::createPalette(n_states,
+                                        c("#084C61", "#DB504A",
+                                                   "#E3B505", "#4F6D7A", 
+                                                      "#56A3A6"))
+names(colors_pal) <- NULL
+
+
+trace_tbl_inc <- as_tibble(mod_basecase$m_M) %>% 
+  mutate(cycle_num = 0:n_cycles) %>% 
+  pivot_longer(1:n_states, names_to = "state", values_to = "count")
+
+
+trace_tbl_inc$count[trace_tbl_inc$state == "BO_OD_DEATH" &
+                      trace_tbl_inc$cycle_num == 180] <- trace_tbl_inc$count[trace_tbl_inc$state == "BO_OD_DEATH" &
+                      trace_tbl_inc$cycle_num == 180] + mod_basecase$extra_od_deaths
+
+trace_tbl_inc$count[trace_tbl_inc$state == "BO_MOD_BI" &
+                      trace_tbl_inc$cycle_num == 180] <- trace_tbl_inc$count[trace_tbl_inc$state == "BO_MOD_BI" &
+                      trace_tbl_inc$cycle_num == 180] + mod_basecase$extra_mod_bi
+
+trace_tbl_inc$count[trace_tbl_inc$state == "BO_SEVERE_BI" &
+                      trace_tbl_inc$cycle_num == 180] <- trace_tbl_inc$count[trace_tbl_inc$state == "BO_SEVERE_BI" &
+                      trace_tbl_inc$cycle_num == 180] + mod_basecase$extra_sev_bi
+
+trace_tbl_inc$state <- factor(trace_tbl_inc$state,
+                              levels = v_state_names,
+                              labels = v_state_names)
+
+p4 <- ggplot(trace_tbl_inc, aes(x = cycle_num, y = count, colour = state)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  ggrepel::geom_text_repel(data = trace_tbl_inc %>% filter(cycle_num == 180), 
+                  aes(x = cycle_num, y = count, label = state), 
+                  check_overlap = T, size = 3) +
+  scale_color_manual(values = colors_pal)
+```
+
+
+```{r fig.cap = "Fig 2a: Trace plots for the states in the model"}
+plotly::ggplotly(p4)
+```
+
+
+```{r fig.cap= "Fig 2b: Cumulative Opioid-realted overdose deaths over 15 year horizon"}
+p5 <- ggplot(trace_tbl_inc %>% 
+               filter(state == "BO_OD_DEATH") %>% 
+               filter(cycle_num != 0) %>% 
+               filter((cycle_num + 1) %% 12 == 1) %>% 
+               mutate(year = c(2015:2029)),
+             aes(x = year, y = count)) +
+  geom_line() +
+  ylab("Total opioid-related overdose deaths") + xlab("Year") 
+# +
+#   ggtitle("Total opioid-related overdose deaths over time")
+
+plotly::ggplotly(p5)
+```
+
+The results from the uncalibrated model (for "no intervention") show that over time with total opioid-related overdose deaths would increase from 1837 in 2015 to 117 649 by the end of 2029 and overall deaths would increase from 23 089 in 2015 to 4 517 061. Furthermore, illicit opioid use increased from 290 063 to 2 485 660, while prescription opioid misuse increased initially then plateaued and slightly decreased. Additionally, there was a decrease in the number of individuals in the chronic pain with no opioid use and with prescription opioid use.  
+
 
 ## Comparison between SIR sample, uncalibrated sample, uncalibrated point estimates and calibration targets
-![Fig.2a: Prevalence of prescription opioid use (an interactive version of this plot can be found in Appendix 4)](p_prev_sir.png)
 
-![Fig.2b: Total number of overall deaths (excluding opioid-related OD deaths) (an interactive version of this plot can be found in Appendix 4)](p_deaths_sir.png)
+![Fig.3a: Prevalence of prescription opioid use (an interactive version of this plot can be found in Appendix 5)](p_prev_sir.png)
 
-![Fig.2c: Yearly counts of people in OAT (an interactive version of this plot can be found in Appendix 4)](p_oat_sir.png)
+![Fig.3b: Total number of overall deaths (excluding opioid-related overdose deaths) (an interactive version of this plot can be found in Appendix 5)](p_deaths_sir.png)
 
-![Fig.2d: Total number of opioid-related OD deaths (an interactive version of this plot can be found in Appendix 4)](p_oddeath_sir.png)
+![Fig.3c: Yearly counts of people in OAT (an interactive version of this plot can be found in Appendix 5)](p_oat_sir.png)
 
-The model approximated the calibration targets well: even though the distribution of prevalence of opioid prescription did not include the target values, the difference between the values was negligible. The distribution for overall deaths included the target values and the distribution for opioid-related deaths was larger than the target values (what we wanted the model to result in). However the distribution of OAT counts doesn't include the target values and that might be either because these values aren't accurate enough to represent the values estimated by the model or that the calibration process didn't work as well. Overall, the estimates from the model seem to be approximating values found in the literature.  
+![Fig.3d: Total number of opioid-related overdose deaths (an interactive version of this plot can be found in Appendix 5)](p_oddeath_sir.png)
 
-## Results for the primary outcomes (PSA)  
+The model approximated the calibration targets well: even though the distribution of prevalence of opioid prescription did not include the target values, the difference between the values was negligible. The distribution for overall deaths included the target values and the distribution for opioid-related deaths was larger than the target values (what we wanted the model to result in). However the distribution of OAT counts does not include the target values and that might be either because these values are not accurate enough to represent the values estimated by the model or that the calibration process did not work as well. Overall, the estimates from the model seem to be approximating values found in the literature.
+
+## Results for the primary outcomes (PSA)
 
 ```{r}
 m_outcomes_psa <- readRDS(here("01_data/m_outcomes_psa.RDS"))
@@ -385,7 +442,10 @@ tbl_effect_plot1 <- cbind.data.frame(value = c("lb", "ub", "median"),
                                              ifelse(Intervention == "all", "All Interventions", Intervention)))))
   
 tbl_effect_plot1$Intervention <- factor(tbl_effect_plot1$Intervention, levels = mod_names, labels = mod_names)
+```
 
+
+```{r fig.cap = "Fig. 4a: Percent change between the interventions and no intervention in terms of 3 primary outcomes: cost, overall deaths and opioid-related overdose deaths"}
 ggplotly(ggplot(data = tbl_effect_plot1, aes(x = group, y = median))+
   geom_jitter(aes(color = Intervention, shape = Intervention), size = 2, position = position_dodge(0.25)) +
     # geom_errorbar(aes(ymin = lb, ymax = ub, color = Intervention, shape = Intervention), width = 0.3, position = position_dodge(0.1)) +
@@ -420,8 +480,10 @@ tbl_effect_plot2 <- cbind.data.frame(value = c("cost_lb", "cost_ub", "cost_media
                                              ifelse(Intervention == "all", "All Interventions", Intervention)))))
   
   tbl_effect_plot2$Intervention <- factor(tbl_effect_plot2$Intervention, levels = mod_names, labels = mod_names)
+```
 
 
+```{r fig.cap = "Fig. 4b: Percent change in opioid-related overdose deaths vs percent change in costs for all interventions compared to no interventions"}
 ggplotly(ggplot(data = tbl_effect_plot2, aes(x = cost_median, y = oddeath_median)) +
   geom_point(aes(color = Intervention), size = 1) +
     geom_pointrange(aes(ymin = oddeath_lb, ymax = oddeath_ub, color = Intervention)) +
@@ -435,11 +497,9 @@ ggplotly(ggplot(data = tbl_effect_plot2, aes(x = cost_median, y = oddeath_median
   theme_minimal())
 ```
 
+The results show that 3 interventions individually and combined reduced the total number of opioid-related deaths compared to no interventions, with all interventions combined resulting in `r mean_oddeath_diff_per_all` \[`r ci_oddeath_diff_per_all[2]`, `r ci_oddeath_diff_per_all[1]`\] % difference compared to no intervention scenario. All interventions combined and prescription guidelines resulted in reduction in costs as well, however Naloxone and Safer Supply increased costs slightly. Implementing all interventions combined reduced both costs and opioid-related overdose deaths. Regarding overall deaths though, except for safer supply, all other scenarios either increased overall deaths or result in inconclusive results.
 
-The results show the 3 interventions individually and all together reduced the total number of opioid-related deaths compared to no interventions, with all interventions combined resulting in `r mean_oddeath_diff_per_all` [`r ci_oddeath_diff_per_all[2]`, `r ci_oddeath_diff_per_all[1]`] % difference compared to no intervention scenario. All interventions and prescription guidelines resulted in reduction costs as well, however Naloxone and Safer Supply increased costs slightly. Implementing all interventions reduces both costs and opioid-related OD deaths.  
-Regarding overall deaths though, except for safer supply, all other scenarios either increase overall deaths or result in inconclusive results.  
-
-## Results for the secondary outcomes (point estimates) 
+## Results for the secondary outcomes (point estimates)
 
 ```{r}
 v_yrs_prev <- c(2015:2029)
@@ -533,7 +593,8 @@ prev_sevbi_yr_tbl <- noint_prev_sevbi_yr_tbl %>%
 ```
 
 Weighted Yearly Prevalence of Severe Brain Injury
-```{r}
+
+```{r fig.cap="Fig. 5a: Weighted yearly prevalence of severe brain injury over 15 years"}
 ggplotly(ggplot() +
   geom_point(data = prev_sevbi_yr_tbl,
              aes(x = factor(year), y = value,
@@ -564,7 +625,7 @@ prev_modbi_yr_tbl <- noint_prev_modbi_yr_tbl %>%
 
 Weighted Yearly Prevalence of Moderate Brain Injury
 
-```{r}
+```{r fig.cap="Fig. 5b: Weighted yearly prevalence of moderate brain injury over 15 years"}
 ggplotly(ggplot() +
   geom_point(data = prev_modbi_yr_tbl,
              aes(x = factor(year), y = value,
@@ -597,7 +658,7 @@ prev_tx_yr_tbl <- noint_prev_tx_yr_tbl %>%
 
 Weighted Yearly Prevalence of substance use treatment
 
-```{r}
+```{r fig.cap="Fig. 5c: Weighted yearly prevalence of substance use treatment over 15 years"}
 ggplotly(ggplot() +
   geom_point(data = prev_tx_yr_tbl,
              aes(x = factor(year), y = value,
@@ -640,7 +701,7 @@ prev_rx_opd_yr_tbl <- noint_prev_rx_opd_yr_tbl %>%
 
 Weighted Yearly Prevalence of prescription opioid use
 
-```{r}
+```{r fig.cap="Fig. 5d: Weighted yearly prevalence of prescription opioid use over 15 years"}
 ggplotly(ggplot() +
   geom_point(data = prev_rx_opd_yr_tbl,
              aes(x = factor(year), y = value,
@@ -671,7 +732,7 @@ prev_illicituse_yr_tbl <- noint_prev_illicituse_yr_tbl %>%
 
 Weighted Yearly Prevalence of illicit opioid use
 
-```{r}
+```{r fig.cap="Fig. 5e: Weighted yearly prevalence of illicit opioid use over 15 years"}
 ggplotly(ggplot() +
   geom_point(data = prev_illicituse_yr_tbl,
              aes(x = factor(year), y = value,
@@ -699,9 +760,9 @@ prev_rxmisuse_yr_tbl <- noint_prev_rxmisuse_yr_tbl %>%
             pg_prev_rxmisuse_yr_tbl, allint_prev_rxmisuse_yr_tbl)
 ```
 
-Weighted Yearly Prevalence of rx opioid misuse
+Weighted Yearly Prevalence of prescription opioid misuse
 
-```{r}
+```{r fig.cap="Fig. 5f: Weighted yearly prevalence of prescription opioid misuse over 15 years"}
 ggplotly(ggplot() +
   geom_point(data = prev_rxmisuse_yr_tbl,
              aes(x = factor(year), y = value,
@@ -731,7 +792,7 @@ prev_od_yr_tbl <- noint_prev_od_yr_tbl %>%
 
 Weighted Yearly Prevalence of opioid-related overdose
 
-```{r}
+```{r fig.cap="Fig. 5g: Weighted yearly prevalence of opioid-related overdose over 15 years"}
 ggplotly(ggplot() +
   geom_point(data = prev_od_yr_tbl,
              aes(x = factor(year), y = value,
@@ -742,20 +803,16 @@ ggplotly(ggplot() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + theme_minimal())
 ```
 
-The results show that none of the interventions affected prevalence of brain injury except for Safer Supply. Safer supply also resulted in an increase of prevalence in substance use treatment (which is expected since it is part of substance use treatment). Prescription Guidelines and All interventions resulted in a reduction in prevalence of prescription opioid use and prescription opioid misuse. No notable differences were observed for prevalence of opioid illicit drug use and opioid-related overdose. 
+The results show that none of the interventions affected prevalence of brain injury except for Safer Supply. Safer supply also resulted in an increase of prevalence in substance use treatment (which is expected since it is part of substance use treatment). Prescription Guidelines and All interventions combned resulted in a reduction in prevalence of prescription opioid use and prescription opioid misuse. No notable differences were observed for prevalence of opioid illicit drug use and opioid-related overdose.
 
 # Discussion and next steps
 
- What is the relationship between your findings and the wider literature or policy landscape?
+This analysis shows the promising effects of these interventions in reducing the direct harms of the opioid crisis by reducing opioid-related overdose deaths. From a healthcare perspective, when all interventions combined are implemented  they would reduce costs while saving lives. However, the results show that there might be negative spillover effects regarding overall deaths which are not as promising. We hypothesize that these negative spillover effects are affecting marginalized sub-populations such as those suffering from chronic non-cancer pain, cancer pain and those in palliative care, we are interested in further examining the pathways that led to that increase in overall deaths.
 
-This analysis shows the promising effects of these interventions in reducing the direct harms of opioid crisis by reducing opioid-related OD deaths. From a healthcare perspective, when all interventions are implemented simultaneously they would reduce costs while saving lives. However, the results show that there might be negative spillover effects regarding overall deaths are not as promising. We hypothesize that these negative spillover effects are affecting marginalized sub-populations such as those suffering from chronic non-cancer pain, cancer pain and those in palliative care, we are interested in examining the pathways that led to that increase in overall deaths.  
+One of the strengths of this analysis is that the model distinguished between chronic non-cancer and cancer pain and included palliative care which allows us to examine mechanisms and pathways that have not been previously examined, once the data is available. It also included brain injuries as one of the often neglected sequelae of overdose. The uncalibrated model estimated values that were similar to target values (a strength of the model), however, it seemed that the calibration did not make a significant difference (a limitation). The calibration might not have worked due to non-identifiability problem since we have many parameters that we were trying to calibrate and few calibration targets [@alarid-escuderoNonidentifiabilityModelCalibration2018]. However, that is due to the lack of data availability. This has been the main limitation of this project, there is a lack of data for the different parameters, many of which were based on scientific assumptions and knowledge of experts in the field. This model does not take into account heterogeneity in gender, age,or models the dynamic aspect of demand and supply of both naloxone and drugs in the illicit market or distinguished between different illicit drugs (heroin vs fentanyl vs other opioids).
+As a next step, we are interested in 1) repeating the analysis for only Ontario since they have more data available so we can better calibrate the model parameters by including more calibration targets, 2) conduct a value of information analysis to identify the parameters that we need to collect data on, 3) use British Columbia data to try to further understand the pathways that led to increase in overall deaths and repeat the analysis for this province similar to Ontario and 4) conduct the same analysis with societal costs in addition to healthcare costs.
 
-One of the strengths of this analysis is that the model distinguished between chronic noncancer and cancer pain and included palliative care which allows us to examine mechanisms and pathways that haven't been previously examined, once the data is available. It also included brain injuries as one of the often neglected sequalea of overdose. The uncalibrated model estimated values that were similar to target values (a strength of the model), however, it seemed that the calibration did not make a significant difference (a limitation). The calibration might not have worked due to non-identifiability problem since we have many parameters that we were trying to calibrate and few calibration targets. However that is due to the lack of data availability. This has been the main limitation of this project, there is a lack of data for the different parameters, many of which were based on scientific assumptions and knowledge of experts in the field. This model doesn't take into account heterogeneity in gender, age, or models the dynamic aspect of demand and supply of both naloxone and drugs in the illicit market.    
-As a next step, we are interested in 1) repeating the analysis for only Ontario since they have more data available so we can better calibrate the model parameters by including more calibration targets, 2) conduct a value of information analysis to identify the parameters that we need to collect data on, 3) use British Columbia data to try to further understand the pathways that led to increase in overall deaths and repeat the analysis for this province similar to Onatrio and 4) conduct the same analysis with societal costs in addition to healthcare costs.
-
-
-
-# References
+This analysis will contribute to the evidence on the potential effectiveness of these federal interventions and hints at possible negative spillover effects that need to be examined further. It also reflects the need for collecting better data to be able to evaluate the effectiveness of these interventions as they are being implemented and expanded. 
 
 # Appendix 1: Tables of the parameters used in the analysis
 
@@ -766,7 +823,6 @@ flextable(ini_states_tbl_org %>%
             select(`Variable `, basevalue)) |>
   autofit()
 ```
-
 
 ## Population increase every month
 
@@ -795,12 +851,18 @@ flextable(costs_tbl) |>
   autofit()
 ```
 
-# Appendix 2: Comparison between Uncalibrated model and Calibration Targets
+
+# Appendix 2: One way sensitivity analysis for the uncalibrated no intervention model
+
+```{r child = here('03_outputs/01_ows_precalib.qmd')}
+```
+
+# Appendix 3: Comparison between Uncalibrated model and Calibration Targets
 
 ```{r child = here('03_outputs/02a_uncalib_vs_calibtargets_td.qmd')}
 ```
 
-# Appendix 3: Comparison between MAP calibrated model, uncalibrated model and calibration Targets
+# Appendix 4: Comparison between MAP calibrated model, uncalibrated model and calibration Targets
 
 ## Scenario 1
 
@@ -811,26 +873,28 @@ It takes into account fentanyl contamination
 
 ## Scenario 2
 
-It doesn't take into account fentanyl contamination
+It does not take into account fentanyl contamination
 
 ```{r child = here('03_outputs/03b_map_calibmod_vs_targets_ntd.qmd')}
 ```
 
-# Appendix 4: Comparison between SIR calibrated model, uncalibrated model and calibration targets
+# Appendix 5: Comparison between SIR calibrated model, uncalibrated model and calibration targets
 
 ```{r child = here('03_outputs/04_sir_calibmod_vs_targets.qmd')}
 ```
 
-# Appendix 5: CBA results - point estimates
+# Appendix 6: CBA results - point estimates
 
 ```{r child = here('03_outputs/05_cba_results_pointestimates.qmd')}
 ```
 
-# Appendix 6: PSA results
+# Appendix 7: PSA results
 
 ```{r child = here('03_outputs/06_psa_results.qmd')}
 
 ```
 
+# References
 
-
+::: {#refs}
+:::

@@ -143,10 +143,7 @@ p2 <- ggplot() +
   xlab("Year") + ylab("Prevalence of prescription opioid use")+
   scale_color_brewer(palette = "Dark2", name = "") +
   scale_fill_brewer(palette = "Dark2", name = "")
-  # ylim(0,0.2) +
-  # ggtitle("Comparison between uncalibrated annual weighted average and
-  #         observed targets of prevalence of Rx opioids use")
-
+  
 plotly::ggplotly(p2)
 ```
 
@@ -222,7 +219,6 @@ plotly::ggplotly(ggplot() +
   xlab("Year") + ylab("Total Deaths") +
   scale_color_brewer(palette = "Dark2", name = "")  +
   scale_fill_brewer(palette = "Dark2", name = ""))
-  # facet_wrap(~target, scales = "free") + theme(legend.position="bottom")
 
 plotly::ggplotly(ggplot() +
   geom_point(data = deaths_target_uncalib_tbl %>%
@@ -329,8 +325,6 @@ p5 <- ggplot(trace_tbl_inc %>%
              aes(x = year, y = count)) +
   geom_line() +
   ylab("Total opioid-related overdose deaths") + xlab("Year") 
-# +
-#   ggtitle("Total opioid-related overdose deaths over time")
 
 plotly::ggplotly(p5)
 
