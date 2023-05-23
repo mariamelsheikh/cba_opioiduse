@@ -1,0 +1,232 @@
+---
+title: "Comparison between uncalibrated model outcomes and calibration targets - Ontario"
+format:
+  html:
+    toc: true
+    number-sections: true
+    highlight-style: github
+    embed-resources: true
+editor: visual
+date: last-modified
+date-format: "DD/MM/YYYY THH:mm"
+fig-width: 20
+fig-height: 12
+warning: false
+message: false
+code-fold: true
+---
+
+```{r}
+library(here)
+library(RColorBrewer)
+source(here("02_scripts/ontario/03_fun_calib_on.R"))
+# calib_target_mon_tbl <- read_excel(here("01_data/ontario/on_markov_model_parameters_preprior.xlsx"), sheet = "mon_calib_targets")
+# calib_target_yrly_tbl <- read_excel(here("01_data/ontario/on_markov_model_parameters_preprior.xlsx"), sheet = "yrly_calib_targets")
+theme_set(theme_minimal())
+```
+
+```{r}
+uncalibrated_mod_targets <- calc_targets_on(m_M_fun = mod_basecase$m_M,
+                                            m_P_fun = m_P)
+```
+
+## Overall Death
+
+```{r}
+deaths_target_uncalib_tbl <- uncalibrated_mod_targets$tot_deaths %>% 
+  mutate(group = "Uncalibrated Model") %>% 
+  rename(target_val = tot_deaths) %>% 
+  bind_rows(., calib_target_yrly_tbl %>% 
+              select(Year, total_overall_deaths) %>% 
+              mutate(group = "Target") %>% 
+              rename(year = Year,
+                     target_val = total_overall_deaths))
+
+p1 <- ggplot() +
+  geom_point(data = deaths_target_uncalib_tbl,
+             aes(x = factor(year), y = target_val, color = factor(group),
+                 fill = factor(group))) +
+  xlab("Year") + ylab("Overall deaths")+
+  scale_color_brewer(palette = "Dark2", name = "") +
+  scale_fill_brewer(palette = "Dark2", name = "")
+
+plotly::ggplotly(p1)
+```
+## OD-deaths
+
+```{r}
+oddeaths_target_uncalib_tbl <- uncalibrated_mod_targets$inc_oddeath %>% 
+  mutate(group = "Uncalibrated Model") %>% 
+  rename(target_val = new_od_deaths) %>% 
+  bind_cols(., year_mon = calib_target_mon_tbl$`Month, Year`[!is.na(calib_target_mon_tbl$total_od_deaths)]) %>% 
+  select(-c(year, mon)) %>% 
+  bind_rows(., calib_target_mon_tbl %>% 
+              select(`Month, Year`, total_od_deaths) %>% 
+              mutate(group = "Target") %>% 
+              rename(year_mon = `Month, Year`,
+                     target_val = total_od_deaths))
+
+p2 <- ggplot() +
+  geom_point(data = oddeaths_target_uncalib_tbl,
+             aes(x = year_mon, y = target_val, color = factor(group),
+                 fill = factor(group))) +
+  xlab("Year") + ylab("Total opioid-related overdose deaths")+
+  scale_color_brewer(palette = "Dark2", name = "") +
+  scale_fill_brewer(palette = "Dark2", name = "")
+
+plotly::ggplotly(p2)
+
+
+oddeaths_target_uncalib_tbl_yrly <- oddeaths_target_uncalib_tbl %>% 
+  mutate(year = format(year_mon, "%Y")) %>% 
+  group_by(year, group) %>% 
+  summarize(target_val = sum(target_val)) %>% 
+  ungroup()
+
+
+p3 <- ggplot() +
+  geom_point(data = oddeaths_target_uncalib_tbl_yrly,
+             aes(x = year, y = target_val, color = factor(group),
+                 fill = factor(group))) +
+  xlab("Year") + ylab("Total opioid-related overdose deaths")+
+  scale_color_brewer(palette = "Dark2", name = "") +
+  scale_fill_brewer(palette = "Dark2", name = "")
+
+plotly::ggplotly(p3)
+```
+
+## Total number of Rx opioids use
+
+```{r}
+
+prev_rx_opioids_target_uncalib_tbl <- uncalibrated_mod_targets$prev_opioids_rx %>% 
+  mutate(group = "Uncalibrated Model") %>% 
+  rename(target_val = total_rx_opioids) %>% 
+  bind_cols(., year_mon = calib_target_mon_tbl$`Month, Year`[!is.na(calib_target_mon_tbl$total_rx_opioids)]) %>% 
+  select(-c(year, mon)) %>% 
+  bind_rows(., calib_target_mon_tbl %>% 
+              select(`Month, Year`, total_rx_opioids) %>% 
+              mutate(group = "Target") %>% 
+              rename(year_mon = `Month, Year`,
+                     target_val = total_rx_opioids))
+
+
+p4 <- ggplot() +
+  geom_point(data = prev_rx_opioids_target_uncalib_tbl,
+             aes(x = year_mon, y = target_val, color = factor(group),
+                 fill = factor(group))) +
+  xlab("Year") + ylab("Total prescription opioid use")+
+  scale_color_brewer(palette = "Dark2", name = "") +
+  scale_fill_brewer(palette = "Dark2", name = "")
+
+plotly::ggplotly(p4)
+
+
+
+```
+
+# Total number of OAT
+
+```{r}
+prev_oat_target_uncalib_tbl <- uncalibrated_mod_targets$prev_oat %>% 
+  mutate(group = "Uncalibrated Model") %>% 
+  rename(target_val = total_oat) %>% 
+  bind_cols(., year_mon = calib_target_mon_tbl$`Month, Year`[!is.na(calib_target_mon_tbl$total_oat)]) %>% 
+  select(-c(year, mon)) %>% 
+  bind_rows(., calib_target_mon_tbl %>% 
+              select(`Month, Year`, total_oat) %>% 
+              mutate(group = "Target") %>% 
+              rename(year_mon = `Month, Year`,
+                     target_val = total_oat))
+
+
+p5 <- ggplot() +
+  geom_point(data = prev_oat_target_uncalib_tbl,
+             aes(x = year_mon, y = target_val, color = factor(group),
+                 fill = factor(group))) +
+  xlab("Year") + ylab("Total OAT")+
+  scale_color_brewer(palette = "Dark2", name = "") +
+  scale_fill_brewer(palette = "Dark2", name = "")
+
+plotly::ggplotly(p5)
+```
+
+# Cancer incidence (new cases)
+
+```{r}
+cancer_inc_target_uncalib_tbl <- uncalibrated_mod_targets$inc_cancer %>% 
+  mutate(group = "Uncalibrated Model") %>% 
+  rename(target_val = new_cases) %>% 
+  bind_rows(., calib_target_yrly_tbl %>% 
+              select(Year, inc_cancer) %>% 
+              mutate(group = "Target") %>% 
+              rename(year = Year,
+                     target_val = inc_cancer))
+
+p6 <- ggplot() +
+  geom_point(data = cancer_inc_target_uncalib_tbl,
+             aes(x = factor(year), y = target_val, color = factor(group),
+                 fill = factor(group))) +
+  xlab("Year") + ylab("New cancer cases")+
+  scale_color_brewer(palette = "Dark2", name = "") +
+  scale_fill_brewer(palette = "Dark2", name = "")
+
+plotly::ggplotly(p6)
+```
+
+# Trace Plots
+
+```{r fig.width=18, fig.height=15}
+# build-in color palette
+set.seed(122345)
+colors_pal <- Polychrome::createPalette(n_states,
+                                        c("#084C61", "#DB504A",
+                                                   "#E3B505", "#4F6D7A", 
+                                                      "#56A3A6"))
+names(colors_pal) <- NULL
+
+
+trace_tbl_inc <- as_tibble(mod_basecase$m_M) %>% 
+  mutate(cycle_num = 0:n_cycles) %>% 
+  pivot_longer(1:n_states, names_to = "state", values_to = "count")
+
+
+trace_tbl_inc$count[trace_tbl_inc$state == "BO_OD_DEATH" &
+                      trace_tbl_inc$cycle_num == n_cycles] <- trace_tbl_inc$count[trace_tbl_inc$state == "BO_OD_DEATH" &
+                      trace_tbl_inc$cycle_num == n_cycles] + mod_basecase$extra_od_deaths
+
+trace_tbl_inc$count[trace_tbl_inc$state == "BO_MOD_BI" &
+                      trace_tbl_inc$cycle_num == n_cycles] <- trace_tbl_inc$count[trace_tbl_inc$state == "BO_MOD_BI" &
+                      trace_tbl_inc$cycle_num == n_cycles] + mod_basecase$extra_mod_bi
+
+trace_tbl_inc$count[trace_tbl_inc$state == "BO_SEVERE_BI" &
+                      trace_tbl_inc$cycle_num == n_cycles] <- trace_tbl_inc$count[trace_tbl_inc$state == "BO_SEVERE_BI" &
+                      trace_tbl_inc$cycle_num == n_cycles] + mod_basecase$extra_sev_bi
+
+trace_tbl_inc$state <- factor(trace_tbl_inc$state,
+                              levels = v_state_names,
+                              labels = v_state_names)
+p4 <- ggplot(trace_tbl_inc, aes(x = cycle_num, y = count, colour = state)) +
+  geom_line() +
+  ylab("Count") + xlab("Cycle Number") +
+  ggrepel::geom_text_repel(data = trace_tbl_inc %>% filter(cycle_num == n_cycles), 
+                  aes(x = cycle_num, y = count, label = state), 
+                  check_overlap = T, size = 3) +
+  scale_color_manual(values = colors_pal)
+
+plotly::ggplotly(p4)
+
+
+p5 <- ggplot(trace_tbl_inc %>% 
+               filter(state == "BO_OD_DEATH") %>% 
+               filter(cycle_num != 0) %>% 
+               filter((cycle_num + 1) %% 12 == 1) %>% 
+               mutate(year = c(2010:2029)),
+             aes(x = year, y = count)) +
+  geom_line() +
+  ylab("Total opioid-related overdose deaths") + xlab("Year") 
+
+plotly::ggplotly(p5)
+
+
+```

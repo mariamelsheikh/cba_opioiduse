@@ -1,0 +1,382 @@
+---
+title: "One-way sensitivity analysis - pre-calibration for status quo model - Ontario"
+format:
+  html:
+    toc: true
+    number-sections: true
+    highlight-style: github
+    embed-resources: true
+editor: visual
+date: last-modified
+date-format: "DD/MM/YYYY THH:mm"
+fig-width: 20
+fig-height: 12
+warning: false
+message: false
+code-fold: true
+---
+
+```{r}
+library(here)
+library(plotly)
+theme_set(theme_minimal())
+
+source(here("02_scripts/ontario/01_fun_data_on.R"))
+
+t_owsa_ini_pop <- read.csv(file = here("01_data/ontario/ows_tbl_ini_pop_on.csv")) %>% select(-X)
+ows_tbl_prob <- read.csv(, file = here("01_data/ontario/ows_tbl_prob_on.csv")) %>% select(-X)
+
+```
+
+# Initial population
+
+#### Costs
+
+```{r}
+t_owsa_ini_pop_costs <- t_owsa_ini_pop %>% 
+  select(costs_low, costs_high, name) 
+t_owsa_ini_pop_costs$name <- reorder(t_owsa_ini_pop_costs$name, t_owsa_ini_pop$costs_range)
+
+t_owsa_ini_pop_costs <- t_owsa_ini_pop_costs %>% 
+  pivot_longer(1:2, names_to = "group", values_to = "costs") %>% 
+  mutate(costs_new = (costs - mod_basecase$total_net_present_cost)) %>% 
+  filter(costs_new != 0) %>% 
+  mutate(group = ifelse(group == "costs_high", "> basecase value",
+                        ifelse(group == "costs_low", "< basecase value", group)))
+
+
+ggplotly(ggplot() +
+  geom_bar(data = t_owsa_ini_pop_costs %>% filter(abs(costs_new) >= 50000000),
+       aes(x = name, y = costs_new, fill = group, color = group), stat = "identity") + coord_flip() +
+  ylab("Difference in Costs from the basecase value") + xlab("") +
+  labs(color = "Difference in initial \n population value", fill = "Difference in initial \n population value") +
+    scale_x_discrete(labels=c("ini_pop_BN_CHRONIC" = "Chronic pain, no use",
+                              "ini_pop_BN_PN" = "Pain free, no use",
+                              "ini_pop_BN_ACUTE" = "Acute pain, no use",
+                              "ini_pop_BN_CANCER" = "Cancer, no use",
+                              "ini_pop_BN_OTHER" = "Other, no use",
+                              "ini_pop_BPO_ACUTE" = "Acute pain, Rx use",
+                              "ini_pop_BPO_CHRONIC" = "Chronic pain, Rx use",
+                              "ini_pop_BPO_CANCER" = "Cancer, Rx use",
+                              "ini_pop_BPO_OTHER" = "Other, Rx use",
+                              "ini_pop_BPO_MISUSE" = "Rx opioid misuse",
+                              "ini_pop_BI_ILLICIT" = "Illicit opioid use",
+                              "ini_pop_BS_OAT_MAINT" = "OAT maintenance")) +
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2"))
+```
+
+#### Deaths
+
+```{r}
+t_owsa_ini_pop_deaths <- t_owsa_ini_pop %>% 
+  select(deaths_low, deaths_high, name) 
+t_owsa_ini_pop_deaths$name <- reorder(t_owsa_ini_pop_deaths$name, t_owsa_ini_pop$deaths_range)
+
+t_owsa_ini_pop_deaths <- t_owsa_ini_pop_deaths %>% 
+  pivot_longer(1:2, names_to = "group", values_to = "deaths") %>% 
+  mutate(deaths_new = (deaths - mod_basecase$m_M[n_cycles+1, "BO_DEATH"])) %>% 
+  filter(deaths_new != 0) %>% 
+  mutate(group = ifelse(group == "deaths_high", "> basecase value",
+                        ifelse(group == "deaths_low", "< basecase value", group)))
+
+ggplotly(ggplot() +
+  geom_bar(data = t_owsa_ini_pop_deaths  %>% filter(abs(deaths_new) >= 500),
+       aes(x = name, y = deaths_new, fill = group, color = group), stat = "identity") + coord_flip() +
+  ylab("Difference in Deaths from the basecase value") + xlab("") +
+  labs(color = "Difference in initial \n population value", fill = "Difference in initial \n population value") +
+    scale_x_discrete(labels=c("ini_pop_BN_CHRONIC" = "Chronic pain, no use",
+                              "ini_pop_BN_PN" = "Pain free, no use",
+                              "ini_pop_BN_ACUTE" = "Acute pain, no use",
+                              "ini_pop_BN_CANCER" = "Cancer, no use",
+                              "ini_pop_BN_OTHER" = "Other, no use",
+                              "ini_pop_BPO_ACUTE" = "Acute pain, Rx use",
+                              "ini_pop_BPO_CHRONIC" = "Chronic pain, Rx use",
+                              "ini_pop_BPO_CANCER" = "Cancer, Rx use",
+                              "ini_pop_BPO_OTHER" = "Other, Rx use",
+                              "ini_pop_BPO_MISUSE" = "Rx opioid misuse",
+                              "ini_pop_BI_ILLICIT" = "Illicit opioid use",
+                              "ini_pop_BPO_PALLIATIVE" = "Palliative, Rx use",
+                              "ini_pop_BN_PALLIATIVE" = "Palliative, no use",
+                              "ini_pop_BS_OAT_MAINT" = "OAT maintenance")) +
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2"))
+```
+
+#### OD Deaths
+
+```{r}
+t_owsa_ini_pop_oddeaths <- t_owsa_ini_pop %>% 
+  select(od_deaths_low, od_deaths_high, name) 
+t_owsa_ini_pop_oddeaths$name <- reorder(t_owsa_ini_pop_oddeaths$name, t_owsa_ini_pop$od_deaths_range)
+
+t_owsa_ini_pop_oddeaths <- t_owsa_ini_pop_oddeaths %>% 
+  pivot_longer(1:2, names_to = "group", values_to = "oddeaths") %>% 
+  mutate(oddeaths_new = (oddeaths - (mod_basecase$m_M[n_cycles+1, "BO_OD_DEATH"] + mod_basecase$extra_od_deaths))) %>% 
+  filter(oddeaths_new != 0) %>% 
+  mutate(group = ifelse(group == "od_deaths_high", "> basecase value",
+                        ifelse(group == "od_deaths_low", "< basecase value", group)))
+
+ggplotly(ggplot() +
+  geom_bar(data = t_owsa_ini_pop_oddeaths %>% filter(abs(oddeaths_new) >= 25),
+       aes(x = name, y = oddeaths_new, fill = group, color = group), stat = "identity") + coord_flip() +
+  ylab("Difference in opioid-related overdose deaths from the basecase value") + xlab("") +
+  labs(color = "Difference in initial \n population value", fill = "Difference in initial \n population value") +
+    scale_x_discrete(labels=c("ini_pop_BN_CHRONIC" = "Chronic pain, no use",
+                              "ini_pop_BN_PN" = "Pain free, no use",
+                              "ini_pop_BN_ACUTE" = "Acute pain, no use",
+                              "ini_pop_BN_CANCER" = "Cancer, no use",
+                              "ini_pop_BN_OTHER" = "Other, no use",
+                              "ini_pop_BPO_ACUTE" = "Acute pain, Rx use",
+                              "ini_pop_BPO_CHRONIC" = "Chronic pain, Rx use",
+                              "ini_pop_BPO_CANCER" = "Cancer, Rx use",
+                              "ini_pop_BPO_OTHER" = "Other, Rx use",
+                              "ini_pop_BPO_MISUSE" = "Rx opioid misuse",
+                              "ini_pop_BI_ILLICIT" = "Illicit opioid use",
+                              "ini_pop_BPO_PALLIATIVE" = "Palliative, Rx use",
+                              "ini_pop_BS_OAT_MAINT" = "OAT maintenance")) +
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2"))
+```
+
+# Transition probabilities
+
+#### Costs
+
+```{r}
+ows_tbl_prob_costs <- ows_tbl_prob %>% 
+  select(costs_low, costs_high, name, group) %>%
+  mutate(name = paste(name, group, sep = "_")) %>% 
+  rename(grp = group)
+
+ows_tbl_prob_costs$name <- reorder(ows_tbl_prob_costs$name, ows_tbl_prob$cost_range)
+
+ows_tbl_prob_costs <- ows_tbl_prob_costs %>% 
+  pivot_longer(1:2, names_to = "group", values_to = "costs") %>% 
+  mutate(costs_new = (costs - as.numeric(mod_basecase$total_net_present_cost)),
+         costs_new_per = (costs_new/as.numeric(mod_basecase$total_net_present_cost)) * 100) %>% 
+  filter(costs_new != 0) %>% 
+  mutate(group = ifelse(group == "costs_high", "> basecase value",
+                        ifelse(group == "costs_low", "< basecase value", group)))
+
+
+name_cost_1 <- ows_tbl_prob_costs %>% filter(abs(costs_new_per) >= 0.5) %>% select(name)
+name_cost_2 <- ows_tbl_prob_costs %>% filter(abs(costs_new_per) >= 1.5) %>% select(name)
+
+ggplotly(ggplot() +
+  geom_bar(data = ows_tbl_prob_costs %>% filter(name %in% name_cost_1$name),
+       aes(x = name, y = costs_new, fill = group, color = group), stat = "identity") + coord_flip() +
+  ylab("Difference in Costs from the basecase value") + xlab("") +
+  labs(color = "Difference in transition \n probability value", fill = "Difference in transition \n probability value") +
+    scale_x_discrete(labels=c("p_BN_ACUTE_BN_PN" = "Pain free, no use to acute pain, no use",
+                              "p_BN_CANCER_BN_PN" = "Pain free, no use to cancer, no use",
+                              "p_BPO_ACUTE_BN_PN" = "Pain free, no use to acute pain, Rx use",
+                              "p_BPO_MISUSE_BN_PN" = "Pain free, no use to Rx opioid misuse",
+                              "p_BN_CHRONIC_BN_ACUTE" = "Acute pain, no use to chronic pain, no use",
+                              "p_BN_CANCER_BN_CHRONIC" = "Chronic pain, no use to cancer, no use",
+                              "p_BPO_MISUSE_BN_CHRONIC" = "Chronic pain, no use to Rx opioid misuse",
+                              "p_BPO_OTHER_BN_OTHER" = "Other, no use to other, Rx use",
+                              "p_BN_CHRONIC_BPO_ACUTE" = "Acute pain, Rx use to chronic pain, no use",
+                              "p_BPO_MISUSE_BPO_CHRONIC" = "Chronic pain, Rx use to Rx opioid misuse",
+                              "p_BO_OD_RX_BPO_CHRONIC" = "Chronic pain, Rx use to Rx opioid overdose",
+                              "p_BO_DEATH_BPO_CANCER" = "Cancer, Rx use to death",
+                              "p_BN_OTHER_BPO_OTHER" = "Other, Rx use to other, no use",
+                              "p_BPO_MISUSE_BPO_OTHER" = "Other, Rx use to Rx opioid misuse",
+                              "p_BN_PN_BPO_MISUSE" = "Rx opioid misuse to pain free, no use",
+                              "p_BI_ILLICIT_BPO_MISUSE" = "Rx opioid misuse to illicit opioid use",
+                              "p_BS_DETOX_BI_ILLICIT" = "Illicit opioid use to detox/withdrawal man.",
+                              "p_BS_OAT_INI_BS_DETOX" = "Detox/withdrawal man. to OAT initiation",
+                              "p_BS_OAT_MAINT_BS_OAT_INI" = "OAT initiation to OAT maintenance",
+                              "p_BS_OAT_MAINT_BS_OAT_MAINT" = "OAT maintenance stay",
+                              "p_BO_OD_DEATH_BO_OD_RX" = "Rx opioid overdose to death",
+                              "p_BN_PALLIATIVE_BN_PN" = "Pain Free, no use, to Palliative, no use",
+                              "p_BO_DEATH_BN_PN" = "Pain Free, no use, to Death",
+                              "p_BN_PALLIATIVE_BN_CHRONIC" = "Chronic pain, no use to palliative, no use",
+                              "p_BPO_CHRONIC_BN_CHRONIC" = "Chronic pain, no use to chronic pain, Rx use",  
+                              "p_BO_DEATH_BN_CHRONIC" = "Chronic pain, no use to death",
+                              "p_BO_DEATH_BN_OTHER" = "Other no use to death",
+                              "p_BN_CHRONIC_BPO_CHRONIC" = "Chronic pain, Rx use to chronic pain, no use",
+                              "p_BO_DEATH_BPO_CHRONIC" = "Chronic pain, Rx use to death", 
+                              "p_BPO_MISUSE_BPO_CANCER" = "Cancer, Rx use to Rx opioid misuse",
+                              "p_BO_OD_RX_BPO_CANCER" = "Cancer, Rx use to Rx opioid overdose",
+                              "p_BO_DEATH_BPO_MISUSE" = "Rx opioid misuse to death",
+                              "p_BR_OAT_MAINT_BR_OAT_MAINT" = "R: OAT maintenance stay")) +
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2"))
+
+ggplotly(ggplot() +
+  geom_bar(data = ows_tbl_prob_costs %>% filter(name %in% name_cost_2$name),
+       aes(x = name, y = costs_new, fill = group, color = group), stat = "identity") + coord_flip() +
+  ylab("Difference in Costs from the basecase value") + xlab("") +
+  labs(color = "Difference in transition \n probability value", fill = "Difference in transition \n probability value") +
+    scale_x_discrete(labels=c("p_BN_ACUTE_BN_PN" = "Pain free, no use to acute pain, no use",
+                              "p_BN_CANCER_BN_PN" = "Pain free, no use to cancer, no use",
+                              "p_BPO_ACUTE_BN_PN" = "Pain free, no use to acute pain, Rx use",
+                              "p_BPO_MISUSE_BN_PN" = "Pain free, no use to Rx opioid misuse",
+                              "p_BN_CHRONIC_BN_ACUTE" = "Acute pain, no use to chronic pain, no use",
+                              "p_BN_CANCER_BN_CHRONIC" = "Chronic pain, no use to cancer, no use",
+                              "p_BPO_MISUSE_BN_CHRONIC" = "Chronic pain, no use to Rx opioid misuse",
+                              "p_BPO_OTHER_BN_OTHER" = "Other, no use to other, Rx use",
+                              "p_BN_CHRONIC_BPO_ACUTE" = "Acute pain, Rx use to chronic pain, no use",
+                              "p_BPO_MISUSE_BPO_CHRONIC" = "Chronic pain, Rx use to Rx opioid misuse",
+                              "p_BO_OD_RX_BPO_CHRONIC" = "Chronic pain, Rx use to Rx opioid overdose",
+                              "p_BO_DEATH_BPO_CANCER" = "Cancer, Rx use to death",
+                              "p_BN_OTHER_BPO_OTHER" = "Other, Rx use to other, no use",
+                              "p_BPO_MISUSE_BPO_OTHER" = "Other, Rx use to Rx opioid misuse",
+                              "p_BN_PN_BPO_MISUSE" = "Rx opioid misuse to pain free, no use",
+                              "p_BI_ILLICIT_BPO_MISUSE" = "Rx opioid misuse to illicit opioid use",
+                              "p_BS_DETOX_BI_ILLICIT" = "Illicit opioid use to detox/withdrawal man.",
+                              "p_BS_OAT_INI_BS_DETOX" = "Detox/withdrawal man. to OAT initiation",
+                              "p_BS_OAT_MAINT_BS_OAT_INI" = "OAT initiation to OAT maintenance",
+                              "p_BS_OAT_MAINT_BS_OAT_MAINT" = "OAT maintenance stay",
+                              "p_BO_OD_DEATH_BO_OD_RX" = "Rx opioid overdose to death",
+                              "p_BN_PALLIATIVE_BN_PN" = "Pain Free, no use, to Palliative, no use",
+                              "p_BO_DEATH_BN_PN" = "Pain Free, no use, to Death",
+                              "p_BN_PALLIATIVE_BN_CHRONIC" = "Chronic pain, no use to palliative, no use",
+                              "p_BPO_CHRONIC_BN_CHRONIC" = "Chronic pain, no use to chronic pain, Rx use",  
+                              "p_BO_DEATH_BN_CHRONIC" = "Chronic pain, no use to death",
+                              "p_BO_DEATH_BN_OTHER" = "Other no use to death",
+                              "p_BN_CHRONIC_BPO_CHRONIC" = "Chronic pain, Rx use to chronic pain, no use",
+                              "p_BO_DEATH_BPO_CHRONIC" = "Chronic pain, Rx use to death", 
+                              "p_BPO_MISUSE_BPO_CANCER" = "Cancer, Rx use to Rx opioid misuse",
+                              "p_BO_OD_RX_BPO_CANCER" = "Cancer, Rx use to Rx opioid overdose",
+                              "p_BO_DEATH_BPO_MISUSE" = "Rx opioid misuse to death",
+                              "p_BR_OAT_MAINT_BR_OAT_MAINT" = "R: OAT maintenance stay")) +
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2"))
+```
+
+#### Deaths
+
+```{r}
+ows_tbl_prob_deaths <- ows_tbl_prob %>% 
+  select(deaths_low, deaths_high, name, group) %>%
+  mutate(name = paste(name, group, sep = "_")) %>% 
+  rename(grp = group)
+
+ows_tbl_prob_deaths$name <- reorder(ows_tbl_prob_deaths$name, ows_tbl_prob$deaths_range)
+
+ows_tbl_prob_deaths <- ows_tbl_prob_deaths %>% 
+  pivot_longer(1:2, names_to = "group", values_to = "deaths") %>% 
+  mutate(deaths_new = (deaths - as.numeric(mod_basecase$m_M[n_cycles + 1, "BO_DEATH"])),
+         deaths_new_per = (deaths_new/as.numeric(mod_basecase$m_M[n_cycles + 1, "BO_DEATH"])) * 100) %>% 
+  filter(deaths_new != 0) %>% 
+  mutate(group = ifelse(group == "deaths_high", "> basecase value",
+                        ifelse(group == "deaths_low", "< basecase value", group)))
+
+
+name_death_1 <- ows_tbl_prob_deaths %>% filter(abs(deaths_new_per) >= 0.5) %>% select(name)
+
+ggplotly(ggplot() +
+  geom_bar(data = ows_tbl_prob_deaths %>% filter(name %in% name_death_1$name),
+       aes(x = name, y = deaths_new, fill = group, color = group), stat = "identity") + coord_flip() +
+  ylab("Difference in deaths from the basecase value") + xlab("") +
+  labs(color = "Difference in transition \n probability value", fill = "Difference in transition \n probability value") +
+    scale_x_discrete(labels=c("p_BN_ACUTE_BN_PN" = "Pain free, no use to acute pain, no use",
+                              "p_BN_CANCER_BN_PN" = "Pain free, no use to cancer, no use",
+                              "p_BPO_ACUTE_BN_PN" = "Pain free, no use to acute pain, Rx use",
+                              "p_BPO_MISUSE_BN_PN" = "Pain free, no use to Rx opioid misuse",
+                              "p_BN_CHRONIC_BN_ACUTE" = "Acute pain, no use to chronic pain, no use",
+                              "p_BN_CANCER_BN_CHRONIC" = "Chronic pain, no use to cancer, no use",
+                              "p_BPO_MISUSE_BN_CHRONIC" = "Chronic pain, no use to Rx opioid misuse",
+                              "p_BPO_OTHER_BN_OTHER" = "Other, no use to other, Rx use",
+                              "p_BN_CHRONIC_BPO_ACUTE" = "Acute pain, Rx use to chronic pain, no use",
+                              "p_BPO_MISUSE_BPO_CHRONIC" = "Chronic pain, Rx use to Rx opioid misuse",
+                              "p_BO_OD_RX_BPO_CHRONIC" = "Chronic pain, Rx use to Rx opioid overdose",
+                              "p_BO_DEATH_BPO_CANCER" = "Cancer, Rx use to death",
+                              "p_BN_OTHER_BPO_OTHER" = "Other, Rx use to other, no use",
+                              "p_BPO_MISUSE_BPO_OTHER" = "Other, Rx use to Rx opioid misuse",
+                              "p_BN_PN_BPO_MISUSE" = "Rx opioid misuse to pain free, no use",
+                              "p_BI_ILLICIT_BPO_MISUSE" = "Rx opioid misuse to illicit opioid use",
+                              "p_BS_DETOX_BI_ILLICIT" = "Illicit opioid use to detox/withdrawal man.",
+                              "p_BS_OAT_INI_BS_DETOX" = "Detox/withdrawal man. to OAT initiation",
+                              "p_BS_OAT_MAINT_BS_OAT_INI" = "OAT initiation to OAT maintenance",
+                              "p_BS_OAT_MAINT_BS_OAT_MAINT" = "OAT maintenance stay",
+                              "p_BO_OD_DEATH_BO_OD_RX" = "Rx opioid overdose to death",
+                              "p_BN_PALLIATIVE_BN_PN" = "Pain Free, no use, to Palliative, no use",
+                              "p_BO_DEATH_BN_PN" = "Pain Free, no use, to Death",
+                              "p_BN_PALLIATIVE_BN_CHRONIC" = "Chronic pain, no use to palliative, no use",
+                              "p_BPO_CHRONIC_BN_CHRONIC" = "Chronic pain, no use to chronic pain, Rx use",  
+                              "p_BO_DEATH_BN_CHRONIC" = "Chronic pain, no use to death",
+                              "p_BO_DEATH_BN_OTHER" = "Other no use to death",
+                              "p_BN_CHRONIC_BPO_CHRONIC" = "Chronic pain, Rx use to chronic pain, no use",
+                              "p_BO_DEATH_BPO_CHRONIC" = "Chronic pain, Rx use to death", 
+                              "p_BPO_MISUSE_BPO_CANCER" = "Cancer, Rx use to Rx opioid misuse",
+                              "p_BO_OD_RX_BPO_CANCER" = "Cancer, Rx use to Rx opioid overdose",
+                              "p_BO_DEATH_BPO_MISUSE" = "Rx opioid misuse to death",
+                              "p_BR_OAT_MAINT_BR_OAT_MAINT" = "R: OAT maintenance stay")) +
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2"))
+```
+
+#### OD-deaths
+
+```{r}
+
+oddeaths_bc <- as.numeric(mod_basecase$m_M[n_cycles+1, "BO_OD_DEATH"] + mod_basecase$extra_od_deaths) 
+ows_tbl_prob_oddeaths <- ows_tbl_prob %>% 
+  select(od_deaths_low, od_deaths_high, name, group) %>%
+  mutate(name = paste(name, group, sep = "_")) %>% 
+  rename(grp = group)
+
+ows_tbl_prob_oddeaths$name <- reorder(ows_tbl_prob_oddeaths$name, ows_tbl_prob$od_deaths_range)
+
+ows_tbl_prob_oddeaths <- ows_tbl_prob_oddeaths %>% 
+  pivot_longer(1:2, names_to = "group", values_to = "oddeaths") %>% 
+  mutate(oddeaths_new = (oddeaths - oddeaths_bc),
+         oddeaths_new_per = (oddeaths_new/oddeaths_bc) * 100) %>% 
+  filter(oddeaths_new != 0) %>% 
+  mutate(group = ifelse(group == "od_deaths_high", "> basecase value",
+                        ifelse(group == "od_deaths_low", "< basecase value", group)))
+
+
+name_oddeath_1 <- ows_tbl_prob_oddeaths %>% filter(abs(oddeaths_new_per) >= 5) %>% select(name)
+
+ggplotly(ggplot() +
+  geom_bar(data = ows_tbl_prob_oddeaths %>% filter(name %in% name_oddeath_1$name),
+       aes(x = name, y = oddeaths_new, fill = group, color = group), stat = "identity") + coord_flip() +
+  ylab("Difference in opioid-related overdose death from the basecase value") + xlab("") +
+  labs(color = "Difference in transition \n probability value", fill = "Difference in transition \n probability value") +
+    scale_x_discrete(labels=c("p_BN_ACUTE_BN_PN" = "Pain free, no use to acute pain, no use",
+                              "p_BN_CANCER_BN_PN" = "Pain free, no use to cancer, no use",
+                              "p_BPO_ACUTE_BN_PN" = "Pain free, no use to acute pain, Rx use",
+                              "p_BPO_MISUSE_BN_PN" = "Pain free, no use to Rx opioid misuse",
+                              "p_BN_CHRONIC_BN_ACUTE" = "Acute pain, no use to chronic pain, no use",
+                              "p_BN_CANCER_BN_CHRONIC" = "Chronic pain, no use to cancer, no use",
+                              "p_BPO_MISUSE_BN_CHRONIC" = "Chronic pain, no use to Rx opioid misuse",
+                              "p_BPO_OTHER_BN_OTHER" = "Other, no use to other, Rx use",
+                              "p_BN_CHRONIC_BPO_ACUTE" = "Acute pain, Rx use to chronic pain, no use",
+                              "p_BPO_MISUSE_BPO_CHRONIC" = "Chronic pain, Rx use to Rx opioid misuse",
+                              "p_BO_OD_RX_BPO_CHRONIC" = "Chronic pain, Rx use to Rx opioid overdose",
+                              "p_BO_DEATH_BPO_CANCER" = "Cancer, Rx use to death",
+                              "p_BN_OTHER_BPO_OTHER" = "Other, Rx use to other, no use",
+                              "p_BPO_MISUSE_BPO_OTHER" = "Other, Rx use to Rx opioid misuse",
+                              "p_BN_PN_BPO_MISUSE" = "Rx opioid misuse to pain free, no use",
+                              "p_BI_ILLICIT_BPO_MISUSE" = "Rx opioid misuse to illicit opioid use",
+                              "p_BS_DETOX_BI_ILLICIT" = "Illicit opioid use to detox/withdrawal man.",
+                              "p_BS_OAT_INI_BS_DETOX" = "Detox/withdrawal man. to OAT initiation",
+                              "p_BS_OAT_MAINT_BS_OAT_INI" = "OAT initiation to OAT maintenance",
+                              "p_BS_OAT_MAINT_BS_OAT_MAINT" = "OAT maintenance stay",
+                              "p_BO_OD_DEATH_BO_OD_RX" = "Rx opioid overdose to death",
+                              "p_BN_PALLIATIVE_BN_PN" = "Pain Free, no use, to Palliative, no use",
+                              "p_BO_DEATH_BN_PN" = "Pain Free, no use, to Death",
+                              "p_BN_PALLIATIVE_BN_CHRONIC" = "Chronic pain, no use to palliative, no use",
+                              "p_BPO_CHRONIC_BN_CHRONIC" = "Chronic pain, no use to chronic pain, Rx use",  
+                              "p_BO_DEATH_BN_CHRONIC" = "Chronic pain, no use to death",
+                              "p_BO_DEATH_BN_OTHER" = "Other no use to death",
+                              "p_BN_CHRONIC_BPO_CHRONIC" = "Chronic pain, Rx use to chronic pain, no use",
+                              "p_BO_DEATH_BPO_CHRONIC" = "Chronic pain, Rx use to death", 
+                              "p_BPO_MISUSE_BPO_CANCER" = "Cancer, Rx use to Rx opioid misuse",
+                              "p_BO_OD_RX_BPO_CANCER" = "Cancer, Rx use to Rx opioid overdose",
+                              "p_BO_DEATH_BPO_MISUSE" = "Rx opioid misuse to death",
+                              "p_BR_OAT_MAINT_BR_OAT_MAINT" = "R: OAT maintenance stay",
+                              "p_BO_OD_DEATH_BO_OD_ILLICIT" = "Illicit opioid overdose to death",
+                              "p_BO_OD_ILLICIT_BI_ILLICIT" = "Illicit opioid use to Illicit opioid overdose",
+                              "p_BO_OD_RX_BPO_MISUSE" = "Rx opioid misuse to Rx opioid overdose",
+                              "p_BR_OD_ILLICIT_BR_ILLICIT" = "R: illicit opioid use to R: illicit opioid overdose",
+                              "p_BO_OD_DEATH_BR_OD_ILLICIT" = "R: Illicit opioid overdose to death",
+                              "p_BO_OD_ILLICIT_BS_DETOX" = "Detox/withdrawal man. to Illicit opioid overdose",
+                              "p_BI_ILLICIT_BS_DETOX" = "Detox/withdrawal man. to illicit opioid use")) +
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2"))
+```
