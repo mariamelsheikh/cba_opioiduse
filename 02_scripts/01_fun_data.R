@@ -355,3 +355,32 @@ markov_mod_ss <- function(num_cycles = n_cycles,
 }
 
 
+## Quick check on deaths vs population growth
+# m_M <- mod_basecase$m_M
+# mat_P <- m_P
+# m_M <- rbind(m_M, (m_M[(n_cycles + 1), ] %*% mat_P))
+# check_tbl <- as.data.frame(matrix(NA, nrow = n_cycles, ncol = 2,
+#                                   dimnames = list(NULL, c("inci_oddeaths", "inci_deaths"))))
+# 
+# for (i in 1:n_cycles){
+#   
+#   check_tbl$inci_oddeaths[i] <- m_M[i + 2, "BO_OD_DEATH"] - m_M[i + 1,"BO_OD_DEATH"]
+#   check_tbl$inci_deaths[i] <-  m_M[i + 1, "BO_DEATH"] - m_M[i,"BO_DEATH"]
+# }
+# 
+# check_tbl <- check_tbl %>% 
+#   cbind.data.frame(., monthly_growth = pop_increase_tbl_new$increase,
+#                    cycle = pop_increase_tbl_new$cycle,
+#                    year = pop_increase_tbl_new$year) %>% 
+#   mutate(total_new_deaths = inci_oddeaths + inci_deaths,
+#          diff = monthly_growth - total_new_deaths)
+# 
+# library(plotly)
+# p <- plotly::ggplotly(ggplot(check_tbl,
+#                         aes(x = cycle, y = diff, color = as.factor(year))) +
+#                    geom_point() + 
+#                    geom_hline(yintercept = 0) +
+#                      ylab("monthly growth - total new deaths") +
+#                      ggtitle("Canada"))
+# 
+# htmlwidgets::saveWidget(as_widget(p), "diff_growth_deaths_canada.html")
