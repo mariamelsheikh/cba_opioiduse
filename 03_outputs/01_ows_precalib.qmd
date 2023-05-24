@@ -16,6 +16,8 @@ message: false
 code-fold: true
 ---
 
+theme: minima
+
 ```{r}
 library(here)
 library(plotly)
